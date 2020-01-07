@@ -5,5 +5,7 @@ int main() {
     
     b = malloc(sizeof(int) * 4);
     
+    free(b);
+    
     return 0;
 }
