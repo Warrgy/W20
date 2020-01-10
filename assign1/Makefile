@@ -1,6 +1,6 @@
 UNAME := $(shell uname)
 CC = gcc
-CFLAGS = -Wall -std=c11 -g -I$(INC_PATH)
+CFLAGS = -Wall -std=c11 -g 
 LDFLAGS= -L.
 
 BIN = ./bin/
@@ -21,7 +21,7 @@ $(BIN)SVGParser: $(BIN)SVGParser.o $(BIN)libsvgparse.so $(SRC)SVGParser.c
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $(BIN)SVGParser $(BIN)*.o #-llist
 	
 $(BIN)SVGParser.o: $(SRC)SVGParser.c
-	$(CC) $(CFLAGS) -c $(SRC)SVGParser.c -o $@
+	$(CC) $(CFLAGS) -I$(INC_PATH) -c $(SRC)SVGParser.c -o $@
 	
 $(BIN)libsvgparse.so: $(BIN)LinkedListAPI.o
 	$(CC) -shared -o $(BIN)libsvgparse.so $(BIN)LinkedListAPI.o
@@ -30,10 +30,13 @@ $(BIN)LinkedListAPI.o: $(SRC)LinkedListAPI.c $(INC)LinkedListAPI.h
 	$(CC) $(CFLAGS) -c -fpic $(SRC)LinkedListAPI.c -o $@
 
 $(SRC)SVGParser.c: $(SRC)SVGParser.c $(INC)SVGParser.h
-	$(CC) $(CFLAGS) $(SRC)SVGParser.c -lxml2 -o $(BIN)SVGParser
+	$(CC) $(CFLAGS)  $(SRC)SVGParser.c -lxml2 -o $(BIN)SVGParser
 
 run: 
 	./bin/SVGParser
+
+valgrind: 
+	valgrind --leak-check=full ./bin/SVGParser
 
 clean:
 	rm -rf $(BIN)SVGParser xmlExample $(BIN)*.o $(BIN)*.so
