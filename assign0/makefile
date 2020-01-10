@@ -1,42 +1,19 @@
-UNAME := $(shell uname)
 CC = gcc
-CFLAGS = -Wall -std=c11 -g 
-LDFLAGS= -L.
+CFLAGS = -Wall -std=c11 -g
 
 BIN = ./bin/
 SRC = ./src/
 INC = ./include/
 
-ifeq ($(UNAME), Linux)
-	INC_PATH = /usr/include/libxml2
-endif
-ifeq ($(UNAME), Darwin)
-	INC_PATH = /System/Volumes/Data/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/libxml2
-endif
+liblist: $(BIN)LinkedListAPI.o
+	$(CC) -shared $(BIN)LinkedListAPI.o -o $(BIN)liblist.so 
+
+$(BIN)LinkedListAPI.o: $(SRC)LinkedListAPI.c
+	$(CC) $(CFLAGS) -c $(SRC)LinkedListAPI.c -o $@
+
+clean: 
+	rm -rf $(BIN)*.o $(BIN)*.so
 
 
-all: $(BIN)SVGParser
-	
-$(BIN)SVGParser: $(BIN)SVGParser.o $(BIN)libsvgparse.so $(SRC)SVGParser.c
-	$(CC) $(CFLAGS) $(LDFLAGS) -o $(BIN)SVGParser $(BIN)*.o #-llist
-	
-$(BIN)SVGParser.o: $(SRC)SVGParser.c
-	$(CC) $(CFLAGS) -I$(INC_PATH) -c $(SRC)SVGParser.c -o $@
-	
-$(BIN)libsvgparse.so: $(BIN)LinkedListAPI.o
-	$(CC) -shared -o $(BIN)libsvgparse.so $(BIN)LinkedListAPI.o
 
-$(BIN)LinkedListAPI.o: $(SRC)LinkedListAPI.c $(INC)LinkedListAPI.h
-	$(CC) $(CFLAGS) -c -fpic $(SRC)LinkedListAPI.c -o $@
 
-$(SRC)SVGParser.c: $(SRC)SVGParser.c $(INC)SVGParser.h
-	$(CC) $(CFLAGS)  $(SRC)SVGParser.c -lxml2 -o $(BIN)SVGParser
-
-run: 
-	./bin/SVGParser
-
-valgrind: 
-	valgrind --leak-check=full ./bin/SVGParser
-
-clean:
-	rm -rf $(BIN)SVGParser xmlExample $(BIN)*.o $(BIN)*.so
