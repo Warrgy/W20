@@ -9,7 +9,7 @@ liblist: $(BIN)LinkedListAPI.o
 	$(CC) -shared $(BIN)LinkedListAPI.o -o $(BIN)liblist.so 
 
 $(BIN)LinkedListAPI.o: $(SRC)LinkedListAPI.c
-	$(CC) $(CFLAGS) -c $(SRC)LinkedListAPI.c -o $@
+	$(CC) $(CFLAGS) -I$(INC)LinkedListAPI.h -c $(SRC)LinkedListAPI.c -o $@
 
 clean: 
 	rm -rf $(BIN)*.o $(BIN)*.so
