@@ -110,8 +110,47 @@ void print_element_names(xmlNode * a_node)
     printf("FINAL i = %d, j = %d\n", i ,j);
 }
 
-void addAttribute(const unsigned char* name, const unsigned char* value, List* listOfAttributes) {
+char* printAttrList(void* nodeToBePrinted) {
+    Attribute* attr = (Attribute*) nodeToBePrinted;
+    char* string = malloc(  strlen(attr->name) + 9 +
+                            strlen(attr->value) + 9 +
+                            + 1);
 
+    sprintf(string, "   Name = %s, Value = %s", attr->name, attr->value);
+
+    return string;
+}
+
+void deleteAttrList(void* nodeToBeDeleted) {
+    Attribute* attr = (Attribute*) nodeToBeDeleted;
+    free(attr);
+}
+
+int compareAttrList(const void* firstNode, const void* secondNode) {
+    const Attribute* one = (const Attribute*) firstNode;
+    const Attribute* two = (const Attribute*) firstNode;
+
+    if (strcmp(one->name, two->name) == 0) {
+        if (strcmp(one->value, two->value) == 0) {
+            return 0;
+        }
+    }
+    return -1;
+}
+
+void addAttribute(const unsigned char* attr_name, const unsigned char* attr_value, List* listOfAttributes) {
+    if (attr_name == NULL || attr_value == NULL)
+        return;
+    List* list = listOfAttributes;
+    Attribute* curAttr = malloc(sizeof(Attribute));
+    printf("Setting values of attribute.\n");
+    curAttr->name = (char*)attr_name;
+    curAttr->value = (char*)attr_value;
+    //strcpy(curAttr->name, (char*)attr_name);
+    //strcpy(curAttr->value, (char*)attr_value);
+
+    printf("Adding attribute struct into back of list.\n");
+    insertBack(list, (void*) curAttr);
 }
 
 SVGimage* convertXMLtoSVG(xmlNode* a_node, SVGimage* image) {
@@ -160,12 +199,18 @@ SVGimage* convertXMLtoSVG(xmlNode* a_node, SVGimage* image) {
             //if parent name = svg
                 if (strcmp((char*)cur_node->name,(char*)"svg") == 0) {
                     xmlAttr *attr_node = NULL;
+                    printf("Initializing list...\n");
+                    image->otherAttributes = initializeList(&printAttrList, &deleteAttrList, &compareAttrList);
+                    printf("Initialization done.\n");
+                    List* svgImageAttributes = image->otherAttributes;
+
                     //Add the other attribute of the svg.
                     for (attr_node = cur_node->properties; attr_node != NULL; attr_node = attr_node->next) {
                         xmlNode* alsoTemp = attr_node->children;
-                        List* svgImageAttributes = image->otherAttributes;
-                        printf("svg attributes are: Name = %s, Content = %s\n", attr_node->name, alsoTemp->content);                        
+                        printf("svg attributes are: Name = %s, Content = %s\n", attr_node->name, alsoTemp->content);  
+                        printf("Adding elements to the attribute...\n");                      
                         addAttribute(attr_node->name, alsoTemp->content, svgImageAttributes);
+                        printf("Added the elements.\n");
                     }
                     
                 }
@@ -230,18 +275,23 @@ SVGimage* createSVGimage(char* fileName) {
 
 char* SVGimageToString(SVGimage* img) {
     char *string = NULL;
+    char *svgAttr = toString(img->otherAttributes);
     
     string = malloc(  strlen((char*)(img->namespace)) + 13 
                     + strlen((char*)(img->title)) + 9 
                     + strlen((char*)(img->description)) + 15
+                    + strlen(svgAttr) + 18
                     + 1);
 
-    sprintf(string, "Namespace = %s\nTitle = %s\nDescription = %s\n", img->namespace, img->title, img->description);
-
+    sprintf(string, "Namespace = %s\nsvg Attributes = %s\nTitle = %s\nDescription = %s\n"
+                    , img->namespace, svgAttr, img->title, img->description);
+    free(svgAttr);
     return string;
 }
 
 void deleteSVGimage(SVGimage* img) {
+    clearList(img->otherAttributes);
+    free(img->otherAttributes);
     free(img);
 }
 
