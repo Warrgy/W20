@@ -85,6 +85,7 @@ const unsigned char* checkNameSpace(xmlNs* namespace) {
     return checkLengthChar(URL);
 }
 
+//Will create and add an attribute to the list of attributes given
 void addAttribute(const unsigned char* attr_name, const unsigned char* attr_value, List* listOfAttributes) {
     if (attr_name == NULL || attr_value == NULL)
         return;
@@ -120,6 +121,7 @@ float stringToFloat(char* string, char units[50]) {
     return value;
 }
 
+//Will create a rectangle with the information provided
 void addRectangle(char* name, xmlNode* data, Rectangle* rectangle) {
     Rectangle* rect = rectangle;
     char* value = (char*)data->content;
@@ -142,6 +144,7 @@ void addRectangle(char* name, xmlNode* data, Rectangle* rectangle) {
     }
 }
 
+//Will create a rectangle with the information in the node provided and add it to the list.
 void addRectangleToList(xmlNode* node, List* rectList) {
     Rectangle *rect = malloc(sizeof(Rectangle));
 
@@ -156,6 +159,7 @@ void addRectangleToList(xmlNode* node, List* rectList) {
     insertBack(rectList, rect);
 }
 
+//Will create a circle with the information provided
 void addCircle(char *name, xmlNode *data, Circle *circle) {
     Circle* circ = circle;
     char* value = (char*)data->content;
@@ -173,6 +177,7 @@ void addCircle(char *name, xmlNode *data, Circle *circle) {
     }
 }
 
+//Will create a circle with the information in the node provided and add it to the list.
 void addCircleToList(xmlNode* node, List* circList) {
     Circle *circle = malloc(sizeof(Circle));
 
@@ -187,6 +192,7 @@ void addCircleToList(xmlNode* node, List* circList) {
     insertBack(circList, circle);
 }
 
+//Will create a path with the information provided
 void addPath(char *name, xmlNode* data, Path* thePath) {
     Path* path = thePath;
     char* value = (char*)data->content;
@@ -201,6 +207,7 @@ void addPath(char *name, xmlNode* data, Path* thePath) {
     }
 }
 
+//Will create a path with the information in the node provided and add it to the list.
 void addPathToList(xmlNode* node, List* pathList) {
     Path *path = malloc(sizeof(Path));
 
@@ -213,6 +220,7 @@ void addPathToList(xmlNode* node, List* pathList) {
     insertBack(pathList, path);
 }
 
+//This will go through the xml tree recursively and add the required information to the SVGimage struct.
 SVGimage* convertXMLtoSVG(xmlNode* a_node, SVGimage* image) {
     xmlNode *cur_node = NULL;
 
@@ -302,6 +310,7 @@ SVGimage* convertXMLtoSVG(xmlNode* a_node, SVGimage* image) {
     return image;
 }
 
+//This will initialize all the elements in the struct, and then fill the struct with all the data.
 SVGimage* initializeSVG(xmlNode *a_node) {
     SVGimage *image = malloc(sizeof(SVGimage));
     strcpy(image->description,"");
@@ -316,6 +325,7 @@ SVGimage* initializeSVG(xmlNode *a_node) {
     return fullSVG;
 }
 
+//This will open a file and create a SVGimaage struct using the XML data in that file.
 SVGimage* createSVGimage(char* fileName) {
     //Check file name
     char *name = checkFileName(fileName);
@@ -390,7 +400,6 @@ void deleteSVGimage(SVGimage* img) {
 
     //free SVGimage
     free(img);
-    
 }
 
 // Function that returns a list of all rectangles in the image.
@@ -437,6 +446,7 @@ int numGroupsWithLen(SVGimage* img, int len) {
     return 0;
 }
 
+//How to free an Attribute struct
 void deleteAttribute( void* data) {
     Attribute* attr = (Attribute*) data;
     free(attr->name);
@@ -444,6 +454,7 @@ void deleteAttribute( void* data) {
     free(attr);
 }
 
+//How to represent the data in an Attribute struct in terms of a string
 char* attributeToString( void* data) {
     Attribute* attr = (Attribute*) data;
     char* string = malloc(  strlen(attr->name) + 3 +
@@ -455,6 +466,7 @@ char* attributeToString( void* data) {
     return string;
 }
 
+//How to compare Attributes
 int compareAttributes(const void *first, const void *second) {
     const Attribute* one = (const Attribute*) first;
     const Attribute* two = (const Attribute*) second;
@@ -481,6 +493,7 @@ int compareGroups(const void *first, const void *second) {
     return 0;
 }
 
+//How to free a rectangle struct
 void deleteRectangle(void* data) {
     Rectangle* rect = (Rectangle*) data;
 
@@ -490,6 +503,7 @@ void deleteRectangle(void* data) {
     free(rect);
 }
 
+//How to represent the data in a Rectangle struct in terms of a string
 char* rectangleToString(void* data) {
     Rectangle* rect = (Rectangle*) data;
     List* rect_attr = rect->otherAttributes;
@@ -504,6 +518,7 @@ char* rectangleToString(void* data) {
     return string;
 }
 
+//How to compare Rectangles
 int compareRectangles(const void *first, const void *second) {
     //TODO: add compare for the units also
     const Rectangle* one = (const Rectangle* ) first;
@@ -517,6 +532,7 @@ int compareRectangles(const void *first, const void *second) {
     return -1;
 }
 
+//How to free a circle struct
 void deleteCircle(void* data) {
     Circle *c = (Circle*) data;
 
@@ -526,6 +542,7 @@ void deleteCircle(void* data) {
     free(c);
 }
 
+//How to represent the data in a Circle struct in terms of a string
 char* circleToString(void* data) {
     Circle *circle = (Circle*) data;
     List* circle_attr = circle->otherAttributes;
@@ -540,6 +557,7 @@ char* circleToString(void* data) {
     return string;
 }
 
+//How to compare Circles
 int compareCircles(const void *first, const void *second) {
     const Circle *one = (const Circle*) first;
     const Circle *two = (const Circle*) second;
@@ -551,6 +569,7 @@ int compareCircles(const void *first, const void *second) {
     return -1;
 }
 
+//How to free a path struct
 void deletePath(void* data) {
     Path *path = (Path*) data;
 
@@ -561,6 +580,7 @@ void deletePath(void* data) {
     free(path);
 }
 
+//How to represent the data in a Path struct in terms of a string
 char* pathToString(void* data) {
     Path *path = (Path*) data;
     List* path_attr = path->otherAttributes;
@@ -575,6 +595,7 @@ char* pathToString(void* data) {
     return string;
 }
 
+//How to compare Paths
 int comparePaths(const void *first, const void *second) {
     const Path* one = (const Path*) first;
     const Path* two = (const Path*) second;
