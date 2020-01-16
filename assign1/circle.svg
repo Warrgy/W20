@@ -3,10 +3,8 @@
   "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
 <svg width="12cm" height="6cm" viewBox="0 0 1200 600"
      xmlns="http://www.w3.org/2000/svg" version="1.1">
-  <title>Example quad01 - quadratic Bézier commands in path data</title>
-  <desc>Picture showing a "Q" a "T" command,
-        along with annotations showing the control points
-        and end points</desc>
-  <circle cx="400" cy="50" r="10"/>
+  <circle cx="400cm" cy="50cm" r="10cm"/>
+  <rect x="1" y="1" width="1198" height="598"
+        stroke="blue" stroke-width="1" />
         
 </svg>

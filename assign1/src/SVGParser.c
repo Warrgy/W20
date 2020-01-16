@@ -1,14 +1,18 @@
+/*
+ * Assignment 1
+ * CIS2750 
+ *
+ * Name: Cameron Fisher
+ * ID: 1057347
+ * Date: Jan 28, 2020
+ */
+
+
 #include "../include/SVGParser.h"
 #include "../include/LinkedListAPI.h"
 #include "assert.h"
 #include <libxml/parser.h>
 #include <libxml/tree.h>
-
-/*int goodStringCompare(char *first, char *second) {
-    char *one = first;
-    char *two = second;
-    return strcmp(one,two);
-}*/
 
 //Make sure the file name that is given, will be valid
 char* checkFileName(char *file) {
@@ -31,9 +35,9 @@ xmlDoc* getDocViaFile(char *fileName) {
     LIBXML_TEST_VERSION
     doc = xmlReadFile(fileName, NULL, 0);
 
-    if (doc == NULL) {
+    /*if (doc == NULL) {
         printf("error: could not parse file %s\n", fileName);
-    }
+    }*/
 
     return doc;
 }
@@ -81,38 +85,6 @@ const unsigned char* checkNameSpace(xmlNs* namespace) {
     return checkLengthChar(URL);
 }
 
-void print_element_names(xmlNode * a_node)
-{
-    xmlNode *cur_node = NULL;
-    int i = 0, j = 0;
-    for (cur_node = a_node; cur_node != NULL; cur_node = cur_node->next) {
-        i++;
-        if (cur_node->type == XML_ELEMENT_NODE) {
-            printf("node type: Element, name: %s\n", cur_node->name);
-        }
-
-        // Uncomment the code below if you want to see the content of every node.
-
-        if (cur_node->content != NULL ){
-            printf("  content: %s\n", cur_node->content);
-        }
-
-        // Iterate through every attribute of the current node
-        xmlAttr *attr;
-        for (attr = cur_node->properties; attr != NULL; attr = attr->next)
-        {
-            printf("%d %d\n", i, ++j);
-            xmlNode *value = attr->children;
-            char *attrName = (char *)attr->name;
-            char *cont = (char *)(value->content);
-            printf("\tattribute name: %s, attribute value = %s\n", attrName, cont);
-        }
-        
-        print_element_names(cur_node->children);
-    }
-    printf("FINAL i = %d, j = %d\n", i ,j);
-}
-
 void addAttribute(const unsigned char* attr_name, const unsigned char* attr_value, List* listOfAttributes) {
     if (attr_name == NULL || attr_value == NULL)
         return;
@@ -124,8 +96,6 @@ void addAttribute(const unsigned char* attr_name, const unsigned char* attr_valu
 
     strcpy(curAttr->name, (char*)attr_name);
     strcpy(curAttr->value, (char*)attr_value);
-    //strcpy(curAttr->name, (char*)attr_name);
-    //strcpy(curAttr->value, (char*)attr_value);
 
     insertBack(list, (void*) curAttr);
 }
@@ -153,7 +123,7 @@ float stringToFloat(char* string, char units[50]) {
 void addRectangle(char* name, xmlNode* data, Rectangle* rectangle) {
     Rectangle* rect = rectangle;
     char* value = (char*)data->content;
-    //TODO: setup the units
+
     if (name == NULL || data == NULL)
         return;
     if (strcmp(name,"x") == 0) {
@@ -173,7 +143,6 @@ void addRectangle(char* name, xmlNode* data, Rectangle* rectangle) {
 }
 
 void addRectangleToList(xmlNode* node, List* rectList) {
-    xmlAttr* data = node->properties;
     Rectangle *rect = malloc(sizeof(Rectangle));
 
     rect->otherAttributes = initializeList(&attributeToString, &deleteAttribute, &compareAttributes);
@@ -181,23 +150,67 @@ void addRectangleToList(xmlNode* node, List* rectList) {
     rect->y = 0.0;
     strcpy(rect->units,"");
 
-    for (data = node->properties; data != NULL; data = data->next) {
+    for (xmlAttr *data = node->properties; data != NULL; data = data->next) {
         addRectangle((char*)data->name, data->children, rect);
     }
     insertBack(rectList, rect);
 }
 
+void addCircle(char *name, xmlNode *data, Circle *circle) {
+    Circle* circ = circle;
+    char* value = (char*)data->content;
+
+    if (strcmp(name, "cx") == 0) {
+        circ->cx = stringToFloat(value, circ->units);
+    } else if (strcmp(name, "cy") == 0) {
+        circ->cy = stringToFloat(value, circ->units);
+    } else if (strcmp(name, "r") == 0) {
+        circ->r = stringToFloat(value, circ->units);
+    } else {
+        List* svgImageAttributes = circ->otherAttributes;
+        
+        addAttribute((const unsigned char*)name, data->content, svgImageAttributes);
+    }
+}
+
 void addCircleToList(xmlNode* node, List* circList) {
     Circle *circle = malloc(sizeof(Circle));
-    
-    printf("circle: name = %s\n", node->name);
 
     circle->otherAttributes = initializeList(&attributeToString, &deleteAttribute, &compareAttributes);
     circle->cy = 0.0;
     circle->cx = 0.0;
     strcpy(circle->units, "");
 
-    
+    for (xmlAttr *data = node->properties; data != NULL; data = data->next) {
+        addCircle((char*)data->name, data->children, circle);
+    }
+    insertBack(circList, circle);
+}
+
+void addPath(char *name, xmlNode* data, Path* thePath) {
+    Path* path = thePath;
+    char* value = (char*)data->content;
+
+    if (strcmp(name, "d") == 0) {
+        path->data = malloc(strlen((char*)value) + 1);
+        strcpy(path->data, value);
+    } else {
+        List* svgImageAttributes = path->otherAttributes;
+        
+        addAttribute((const unsigned char*)name, data->content, svgImageAttributes);
+    }
+}
+
+void addPathToList(xmlNode* node, List* pathList) {
+    Path *path = malloc(sizeof(Path));
+
+    path->otherAttributes = initializeList(&attributeToString, &deleteAttribute, &compareAttributes);
+    //TODO: setting data to nothing if doesnt have datastrcpy(path->data, "");
+
+    for (xmlAttr* data = node->properties; data != NULL; data = data->next) {
+        addPath((char*)data->name, data->children, path);
+    }
+    insertBack(pathList, path);
 }
 
 SVGimage* convertXMLtoSVG(xmlNode* a_node, SVGimage* image) {
@@ -262,13 +275,20 @@ SVGimage* convertXMLtoSVG(xmlNode* a_node, SVGimage* image) {
                 if (strcmp((char*)(paren->name), (char*)"g") != 0) {
                     //circle, parent is not a g.
                     addCircleToList(cur_node, image->circles);
-                    printf("parent is a g\n");
                 }
                 //circle, but parent is a g
-                printf("Found a circle.\n");
+                printf("parent is a g\n");
             }
 
             //if name = path
+            if (strcmp((char*)(cur_node->name), (char*)"path") == 0) {
+                if (strcmp((char*)(paren->name), (char*)"g") != 0) {
+                    //path, but parent is not a g
+                    addPathToList(cur_node, image->paths);
+                    printf("found path.\n");
+                }
+                //path, but parent is a g
+            }
 
             //Deal with g if not already dealt with
         
@@ -289,6 +309,7 @@ SVGimage* initializeSVG(xmlNode *a_node) {
     image->otherAttributes = initializeList(&attributeToString, &deleteAttribute, &compareAttributes);
     image->rectangles = initializeList(&rectangleToString, &deleteRectangle, &compareRectangles);
     image->circles = initializeList(&circleToString, &deleteCircle, &compareCircles);
+    image->paths = initializeList(&pathToString, &deletePath, &comparePaths);
 
     SVGimage *fullSVG = convertXMLtoSVG(a_node, image); 
 
@@ -313,12 +334,11 @@ SVGimage* createSVGimage(char* fileName) {
     SVGimage* image = initializeSVG(root);
     if (image == NULL)
         return NULL;
-    
+
     char* details = SVGimageToString(image);
     printf("\nDetails:\n%s\n", details);
     free(details);
     
-
     xmlFreeDoc(doc);
     xmlCleanupParser();
     printf("Done.\n");
@@ -329,28 +349,46 @@ char* SVGimageToString(SVGimage* img) {
     char *string = NULL;
     char *svgAttr = toString(img->otherAttributes);
     char *rect_list = toString(img->rectangles);
+    char *circle_list = toString(img->circles);
+    char *path_list = toString(img->paths);
 
     string = malloc(  strlen((char*)(img->namespace)) + 13 
                     + strlen((char*)(img->title)) + 9 
                     + strlen((char*)(img->description)) + 15
                     + strlen(svgAttr) + 11 
                     + strlen(rect_list) + 1
+                    + strlen(circle_list) + 1
+                    + strlen(path_list) + 1
                     + 1);
 
-    sprintf(string, "Namespace = %s\nsvg attr: %s\nTitle = %s\nDescription = %s\n%s\n",
-                     img->namespace, svgAttr, img->title, img->description, rect_list); 
+    sprintf(string, "Namespace = %s\nsvg attr: %s\nTitle = %s\nDescription = %s\n%s\n%s\n%s\n",
+                     img->namespace, svgAttr, img->title, img->description, rect_list, circle_list, path_list); 
 
     free(svgAttr);
     free(rect_list);
+    free(circle_list);
+    free(path_list);
     return string;
 }
 
 void deleteSVGimage(SVGimage* img) {
+    //free paths
+    clearList(img->paths);
+    freeList(img->paths);
+
+    //free circles
+    clearList(img->circles);
+    freeList(img->circles);
+
+    //free rectangles
     clearList(img->rectangles);
     freeList(img->rectangles);
-    //check for if it does not work.
+
+    //free svg attributes
     clearList(img->otherAttributes);
     freeList(img->otherAttributes);
+
+    //free SVGimage
     free(img);
     
 }
@@ -446,11 +484,8 @@ int compareGroups(const void *first, const void *second) {
 void deleteRectangle(void* data) {
     Rectangle* rect = (Rectangle*) data;
 
-    if (rect->otherAttributes != NULL) {
-        clearList(rect->otherAttributes);
-        freeList(rect->otherAttributes);
-    }
-        
+    clearList(rect->otherAttributes);
+    freeList(rect->otherAttributes);
 
     free(rect);
 }
@@ -483,35 +518,76 @@ int compareRectangles(const void *first, const void *second) {
 }
 
 void deleteCircle(void* data) {
-    
+    Circle *c = (Circle*) data;
+
+    clearList(c->otherAttributes);
+    freeList(c->otherAttributes);
+
+    free(c);
 }
 
 char* circleToString(void* data) {
-    return NULL;
+    Circle *circle = (Circle*) data;
+    List* circle_attr = circle->otherAttributes;
+    char* circle_attr_string = toString(circle_attr);
+
+    char *string = malloc((9 * 3 * 15) + 8 + 8 + 8 + 7 + (11 + strlen(circle->units)) + (strlen(circle_attr_string) + 1) + 1);
+
+    sprintf(string, "Circle:\n  cx = %.4f\n  cy = %.4f\n  r = %.4f\n  units = %s\n%s\n",
+                circle->cx, circle->cy, circle->r, circle->units, circle_attr_string);
+
+    free(circle_attr_string);
+    return string;
 }
 
 int compareCircles(const void *first, const void *second) {
-    return 0;
+    const Circle *one = (const Circle*) first;
+    const Circle *two = (const Circle*) second;
+
+    if (one->cx == two->cx)
+        if (one->cy == two->cy)
+            if (one->r == two->r)
+                return 0;
+    return -1;
 }
 
 void deletePath(void* data) {
-    
+    Path *path = (Path*) data;
+
+    free(path->data);
+    clearList(path->otherAttributes);
+    freeList(path->otherAttributes);
+
+    free(path);
 }
 
 char* pathToString(void* data) {
-    return NULL;
+    Path *path = (Path*) data;
+    List* path_attr = path->otherAttributes;
+    char* path_attr_string = toString(path_attr);
+
+    char *string = malloc(6 + 7 + strlen(path->data) + strlen(path_attr_string) + 1 + 1);
+
+    sprintf(string, "Path:\n  d = %s\n%s\n",
+                path->data, path_attr_string);
+
+    free(path_attr_string);
+    return string;
 }
 
 int comparePaths(const void *first, const void *second) {
-    return 0;
+    const Path* one = (const Path*) first;
+    const Path* two = (const Path*) second;
+
+    return strcmp(one->data, two->data) == 0;
 }
 
 int main() {
     char* file = malloc(20);
     //strcpy(file, "quad01.svg");
-    //strcpy(file, "Emoji_poo.svg");
+    strcpy(file, "Emoji_poo.svg");
     //strcpy(file, "rect.svg");
-    strcpy(file, "circle.svg");
+    //strcpy(file, "circle.svg");
     SVGimage* img = createSVGimage(file);
 
     deleteSVGimage(img);
