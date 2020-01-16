@@ -7,9 +7,6 @@
   <desc>Picture showing a "Q" a "T" command,
         along with annotations showing the control points
         and end points</desc>
-  <rect x="10000000000cm" y="10000cm" width="1198cm" height="5298cm"
-        fill="none" stroke="blue" stroke-width="1cm" />
-  <rect x="100" y="200" width="1198" height="598"
-        fill="none" stroke="red"  />
+  <circle cx="400" cy="50" r="10"/>
         
 </svg>

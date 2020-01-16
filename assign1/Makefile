@@ -38,7 +38,10 @@ run:
 	./bin/SVGParser
 
 valgrind: 
-	valgrind --leak-check=full ./bin/SVGParser
+	valgrind  --leak-check=full  ./bin/SVGParser
+
+gdb:
+	gdb ./bin/SVGParser
 
 clean:
 	rm -rf $(BIN)SVGParser xmlExample $(BIN)*.o $(BIN)*.so
