@@ -23,10 +23,10 @@ $(BIN)SVGParser: $(BIN)SVGParser.o $(BIN)libsvgparse.so $(SRC)SVGParser.c
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $(BIN)SVGParser $(BIN)*.o #-llist
 	
 $(BIN)SVGParser.o: $(SRC)SVGParser.c
-	$(CC) $(CFLAGS)  -c $(SRC)SVGParser.c -o $@
+	$(CC) $(CFLAGS)  -c -fpic $(SRC)SVGParser.c -o $@
 	
 $(BIN)libsvgparse.so: $(BIN)LinkedListAPI.o
-	$(CC) -shared -o $(BIN)libsvgparse.so $(BIN)LinkedListAPI.o
+	$(CC) -shared -o $(BIN)libsvgparse.so $(BIN)LinkedListAPI.o $(BIN)SVGParser.o
 
 $(BIN)LinkedListAPI.o: $(SRC)LinkedListAPI.c $(INC)LinkedListAPI.h
 	$(CC) $(CFLAGS) -c -fpic $(SRC)LinkedListAPI.c -o $@

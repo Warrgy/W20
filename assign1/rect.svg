@@ -7,6 +7,6 @@
   <desc>Picture showing a "Q" a "T" command,
         along with annotations showing the control points
         and end points</desc>
-  <rect x="1" y="1" width="1198" height="598"
+  <rect x="1cm" y="1cm" width="1198cm" height="598cm"
         fill="none" stroke="blue" stroke-width="1" />
 </svg>
