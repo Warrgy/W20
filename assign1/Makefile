@@ -1,8 +1,6 @@
 UNAME := $(shell uname)
 CC = gcc
-CFLAGS = -Wall -std=c11 -g -lxml2 -I$(INC_PATH)
-
-
+CFLAGS = -Wall -std=c11 -g -lxml2
 LDFLAGS= -L.
 
 BIN = ./bin/
@@ -17,21 +15,21 @@ ifeq ($(UNAME), Darwin)
 endif
 
 
-all: $(BIN)SVGParser
+all: SVGParser
 	
-$(BIN)SVGParser: $(BIN)SVGParser.o $(BIN)libsvgparse.so $(SRC)SVGParser.c
+SVGParser: $(BIN)SVGParser.o libsvgparse.so $(SRC)SVGParser.c
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $(BIN)SVGParser $(BIN)*.o #-llist
 	
 $(BIN)SVGParser.o: $(SRC)SVGParser.c
-	$(CC) $(CFLAGS)  -c -fpic $(SRC)SVGParser.c -o $@
+	$(CC) $(CFLAGS) -I$(INC) -I$(INC_PATH) -c -fpic $(SRC)SVGParser.c -o $@
 	
-$(BIN)libsvgparse.so: $(BIN)LinkedListAPI.o
+libsvgparse.so: $(BIN)LinkedListAPI.o
 	$(CC) -shared -o $(BIN)libsvgparse.so $(BIN)LinkedListAPI.o $(BIN)SVGParser.o
 
 $(BIN)LinkedListAPI.o: $(SRC)LinkedListAPI.c $(INC)LinkedListAPI.h
 	$(CC) $(CFLAGS) -c -fpic $(SRC)LinkedListAPI.c -o $@
 
-$(SRC)SVGParser.c: $(SRC)SVGParser.c $(INC)SVGParser.h
+$(SRC)SVGParser.c:  $(INC)SVGParser.h
 	$(CC) $(CFLAGS)  $(SRC)SVGParser.c  -o $(BIN)SVGParser
 
 run: 
@@ -44,4 +42,4 @@ gdb:
 	gdb ./bin/SVGParser
 
 clean:
-	rm -rf $(BIN)SVGParser xmlExample $(BIN)*.o $(BIN)*.so
+	rm -rf $(BIN)SVGParser $(BIN)*.o $(BIN)*.so

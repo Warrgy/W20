@@ -9,11 +9,8 @@
  */
 
 
-#include "../include/SVGParser.h"
-#include "../include/LinkedListAPI.h"
-#include "assert.h"
-#include <libxml/parser.h>
-#include <libxml/tree.h>
+#include "SVGParser.h"
+#include "LinkedListAPI.h"
 
 //Make sure the file name that is given, will be valid
 char* checkFileName(char *file) {
@@ -57,9 +54,8 @@ const unsigned char* checkLengthChar(const unsigned char *string) {
     return string;
 }
 
-//Basically get the title string from the node
+//Check the title string from the node and return
 char* checkTitle(xmlNode* titleNode) {
-    //TODO: also make sure if you find 1 title, dont do another one. Dont quote me on that. LOok it up.
     if (titleNode == NULL)
         return NULL;
     xmlNode* node = titleNode;
@@ -582,10 +578,10 @@ char* groupToString( void* data) {
 //How to compare Groups
 int compareGroups(const void *first, const void *second) {
     //TODO: finish this up. I think you have to use the compare in the List struct to do it. idk
-    const Group* one = (const Group*) first;
+    /*const Group* one = (const Group*) first;
     const Group* two = (const Group*) second;
     List* one_rec = one->rectangles;
-    List* two_rec = two->rectangles;
+    List* two_rec = two->rectangles;*/
 
     //if (one_rec->compare(one->rectangles, two->rectangles) == 0)
       //  if ()
@@ -699,7 +695,7 @@ int comparePaths(const void *first, const void *second) {
     const Path* one = (const Path*) first;
     const Path* two = (const Path*) second;
 
-    return strcmp(one->data, two->data) == 0;
+    return strcmp(one->data, two->data);
 }
 
 int main() {
@@ -712,7 +708,7 @@ int main() {
 
     deleteSVGimage(img);
 
-    printf("Makefile Test.\n");
+    printf("Done.\n");
     
     free(file);
     return 0;
