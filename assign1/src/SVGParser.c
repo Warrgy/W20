@@ -3,6 +3,7 @@
  * CIS2750 
  *
  * Name: Cameron Fisher
+ * Email: cfishe08@uoguelph.ca
  * ID: 1057347
  * Date: Jan 28, 2020
  */
@@ -220,12 +221,55 @@ void addPathToList(xmlNode* node, List* pathList) {
     insertBack(pathList, path);
 }
 
+//Will create a group with the information provided (mean't for attributes)
+void addGroupAttributes(char* name, xmlNode* data, Group* theGroup) {
+    Group* group = theGroup;
+    List* svgImageAttributes = group->otherAttributes;
+        
+    addAttribute((const unsigned char*)name, data->content, svgImageAttributes);
+    
+}
+
+//Will create a group with the information in the node provided and add it to the list. If a group in a group happens, then we use recursion.
+void addGroupToList(xmlNode *node, List* groupList) {
+    Group *group = malloc(sizeof(Group));
+
+    //Initialize all lists before using
+    group->otherAttributes = initializeList(&attributeToString, &deleteAttribute, &compareAttributes);
+    group->rectangles = initializeList(&rectangleToString, &deleteRectangle, &compareRectangles);
+    group->circles = initializeList(&circleToString, &deleteCircle, &compareCircles);
+    group->paths = initializeList(&pathToString, &deletePath, &comparePaths);
+    group->groups = initializeList(&groupToString, &deleteGroup, &compareGroups);
+
+    //Add the attributes for the list here
+    for (xmlAttr* data = node->properties; data != NULL; data = data->next) {
+        addGroupAttributes((char*)data->name, data->children, group);        
+    }
+
+    //Add rectangles, circles, paths, and groups to each respective list
+    for (xmlNode* child = node->children; child != NULL; child = child->next) {
+        if (strcmp((char*)(child->name), "rect") == 0) {
+            addRectangleToList(child, group->rectangles);
+        } else if (strcmp((char*)(child->name), "circle") == 0) {
+            addCircleToList(child, group->circles);
+        } else if (strcmp((char*)(child->name), "path") == 0) {
+            addPathToList(child, group->paths);
+        } else if (strcmp((char*)(child->name), "g") == 0) {
+            addGroupToList(child, group->groups);
+        } else {
+            //left blank for now
+            //This is if we add more implementation for other types
+        }
+    }
+    insertBack(groupList, group);
+}
+
 //This will go through the xml tree recursively and add the required information to the SVGimage struct.
 SVGimage* convertXMLtoSVG(xmlNode* a_node, SVGimage* image) {
     xmlNode *cur_node = NULL;
 
     for (cur_node = a_node; cur_node != NULL; cur_node = cur_node->next) {
-            printf("Current Loop name: [%s]\n", cur_node->name);
+            //printf("Current Loop name: [%s]\n", cur_node->name);
 
             //If cur_node->nsDef != NULL -> deal with namespace
             //Add and check the NAMESPACE to the SVGimage ----
@@ -243,7 +287,6 @@ SVGimage* convertXMLtoSVG(xmlNode* a_node, SVGimage* image) {
                 if (strcmp((char*)paren->name, (char*)"title") == 0) {
                     if (checkTitle(cur_node) != NULL) {
                         strcpy(image->title, checkTitle(cur_node));
-                        printf("Got the title. it is [%s]\n", image->title);
                     }
                 }
                 //---------------------
@@ -254,7 +297,6 @@ SVGimage* convertXMLtoSVG(xmlNode* a_node, SVGimage* image) {
                 else if (strcmp((char*)paren->name, (char*)"desc") == 0) {
                     if (checkDescription(cur_node) != NULL) {
                         strcpy(image->description, checkDescription(cur_node));
-                        printf("Got the description. it is [%s]\n", image->description);
                     }
                 }
             //--------------
@@ -275,35 +317,39 @@ SVGimage* convertXMLtoSVG(xmlNode* a_node, SVGimage* image) {
 
             //if name = rect, while not in g
             if (strcmp((char*)(cur_node->name),(char*)"rect") == 0) {
-                addRectangleToList(cur_node, image->rectangles);
+                if (strcmp((char*) (paren->name), (char*)"g") != 0) {
+                    addRectangleToList(cur_node, getRects(image));
+                }
             }
 
             //if name = circle, not in g
             if (strcmp((char*)(cur_node->name), (char*)"circle") == 0) {
                 if (strcmp((char*)(paren->name), (char*)"g") != 0) {
                     //circle, parent is not a g.
-                    addCircleToList(cur_node, image->circles);
+                    addCircleToList(cur_node, getCircles(image));
                 }
                 //circle, but parent is a g
-                printf("parent is a g\n");
             }
 
-            //if name = path
+            //if name = path, not in g
             if (strcmp((char*)(cur_node->name), (char*)"path") == 0) {
                 if (strcmp((char*)(paren->name), (char*)"g") != 0) {
                     //path, but parent is not a g
-                    addPathToList(cur_node, image->paths);
-                    printf("found path.\n");
+                    addPathToList(cur_node, getPaths(image));
                 }
                 //path, but parent is a g
             }
-
-            //Deal with g if not already dealt with
+            
+            //If a group then add to group list
+            if (strcmp((char*)(cur_node->name), (char*)"g") == 0) {
+                addGroupToList(cur_node, getGroups(image));
+            }
         
+        //If this node has children then go to them
         if (cur_node->children != NULL) {
-            printf("Going into recursion.\n");
             convertXMLtoSVG(cur_node->children,image);
         }   
+        //if there is no node that is next in the link then break the loop.
         if (cur_node->next == NULL)
             break;
     }
@@ -319,6 +365,7 @@ SVGimage* initializeSVG(xmlNode *a_node) {
     image->rectangles = initializeList(&rectangleToString, &deleteRectangle, &compareRectangles);
     image->circles = initializeList(&circleToString, &deleteCircle, &compareCircles);
     image->paths = initializeList(&pathToString, &deletePath, &comparePaths);
+    image->groups = initializeList(&groupToString, &deleteGroup, &compareGroups);
 
     SVGimage *fullSVG = convertXMLtoSVG(a_node, image); 
 
@@ -351,7 +398,6 @@ SVGimage* createSVGimage(char* fileName) {
     
     xmlFreeDoc(doc);
     xmlCleanupParser();
-    printf("Done.\n");
     return image;
 }
 
@@ -361,6 +407,7 @@ char* SVGimageToString(SVGimage* img) {
     char *rect_list = toString(img->rectangles);
     char *circle_list = toString(img->circles);
     char *path_list = toString(img->paths);
+    char *group_list = toString(img->groups);
 
     string = malloc(  strlen((char*)(img->namespace)) + 13 
                     + strlen((char*)(img->title)) + 9 
@@ -369,19 +416,25 @@ char* SVGimageToString(SVGimage* img) {
                     + strlen(rect_list) + 1
                     + strlen(circle_list) + 1
                     + strlen(path_list) + 1
+                    + strlen(group_list) + 1
                     + 1);
 
-    sprintf(string, "Namespace = %s\nsvg attr: %s\nTitle = %s\nDescription = %s\n%s\n%s\n%s\n",
-                     img->namespace, svgAttr, img->title, img->description, rect_list, circle_list, path_list); 
+    sprintf(string, "Namespace = %s\nsvg attr: %s\nTitle = %s\nDescription = %s\n%s\n%s\n%s\n%s\n",
+                     img->namespace, svgAttr, img->title, img->description, rect_list, circle_list, path_list, group_list); 
 
     free(svgAttr);
     free(rect_list);
     free(circle_list);
     free(path_list);
+    free(group_list);
     return string;
 }
 
 void deleteSVGimage(SVGimage* img) {
+    //free groups
+    clearList(img->groups);
+    freeList(img->groups);
+
     //free paths
     clearList(img->paths);
     freeList(img->paths);
@@ -481,15 +534,61 @@ int compareAttributes(const void *first, const void *second) {
     return -1;
 }
 
+//How to free a group struct
 void deleteGroup(void* data) {
-    
+    Group* group = (Group*) data;
+
+    clearList(group->rectangles);
+    freeList(group->rectangles);
+
+    clearList(group->circles);
+    freeList(group->circles);
+
+    clearList(group->paths);
+    freeList(group->paths);
+
+    clearList(group->otherAttributes);
+    freeList(group->otherAttributes);
+
+    clearList(group->groups);
+    freeList(group->groups);
+
+    free(group);
 }
 
+//How to represent the data in a Group struct in terms of a string
 char* groupToString( void* data) {
-    return NULL;
+    Group* group = (Group*) data;
+    List *group_attr = group->otherAttributes;
+    char *group_attr_string = toString(group_attr);
+    char *g_rect_attr_string = toString(group->rectangles);
+    char *g_circle_attr_string = toString(group->circles);
+    char *g_path_attr_string = toString(group->paths);
+    char *g_g_attr_string = toString(group->groups);
+
+    char* string = malloc( 7 + (12 + strlen(group_attr_string) + 1) + (strlen(g_rect_attr_string) + 2) + (strlen(g_circle_attr_string) + 2) + (strlen(g_path_attr_string) + 2) + (strlen(g_path_attr_string) + 2 + 1));
+    
+    sprintf(string, "Group:\nAttributes:\n%s\n\t%s\n\t%s\n\t%s\n\t%s\n",
+                group_attr_string, g_rect_attr_string, g_circle_attr_string, g_path_attr_string, g_g_attr_string);
+
+    free(g_rect_attr_string);
+    free(g_circle_attr_string);
+    free(g_path_attr_string);
+    free(g_g_attr_string);
+    free(group_attr_string);
+    return string;
 }
 
+//How to compare Groups
 int compareGroups(const void *first, const void *second) {
+    //TODO: finish this up. I think you have to use the compare in the List struct to do it. idk
+    const Group* one = (const Group*) first;
+    const Group* two = (const Group*) second;
+    List* one_rec = one->rectangles;
+    List* two_rec = two->rectangles;
+
+    //if (one_rec->compare(one->rectangles, two->rectangles) == 0)
+      //  if ()
     return 0;
 }
 
@@ -605,8 +704,8 @@ int comparePaths(const void *first, const void *second) {
 
 int main() {
     char* file = malloc(20);
-    //strcpy(file, "quad01.svg");
-    strcpy(file, "Emoji_poo.svg");
+    strcpy(file, "quad01.svg");
+    //strcpy(file, "Emoji_poo.svg");
     //strcpy(file, "rect.svg");
     //strcpy(file, "circle.svg");
     SVGimage* img = createSVGimage(file);
