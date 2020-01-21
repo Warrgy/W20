@@ -1,7 +1,7 @@
 UNAME := $(shell uname)
 CC = gcc
 CFLAGS = -Wall -std=c11 -g -lxml2
-LDFLAGS= -L.
+LDFLAGS= -L. 
 
 BIN = ./bin/
 SRC = ./src/
@@ -27,7 +27,7 @@ libsvgparse.so: $(BIN)LinkedListAPI.o
 	$(CC) -shared -o $(BIN)libsvgparse.so $(BIN)LinkedListAPI.o $(BIN)SVGParser.o
 
 $(BIN)LinkedListAPI.o: $(SRC)LinkedListAPI.c $(INC)LinkedListAPI.h
-	$(CC) $(CFLAGS) -c -fpic $(SRC)LinkedListAPI.c -o $@
+	$(CC) $(CFLAGS) -c -fpic -I$(INC) $(SRC)LinkedListAPI.c -o $@
 
 $(SRC)SVGParser.c:  $(INC)SVGParser.h
 	$(CC) $(CFLAGS)  $(SRC)SVGParser.c  -o $(BIN)SVGParser
