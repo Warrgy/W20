@@ -8,10 +8,11 @@
  * Date: Jan 28, 2020
  */
 
-
+#include <math.h>
 #include "SVGParser.h"
 #include "LinkedListAPI.h"
-#include <math.h>
+
+#define PI 3.1415926535
 
 //Make sure the file name that is given, will be valid
 char* checkFileName(char *file) {
@@ -499,42 +500,131 @@ int numRectsWithArea(SVGimage* img, float area) {
 
     Rectangle* current = NULL;
     int product = 0;
-    float temp = 0;
 
 	while (data != NULL)
 	{
         current = (Rectangle*) data;
-        printf("x = %f\ty= %f\n", current->x, current->y);
-        temp = current->x * current->y;
-        printf("temp = %f\n", temp);
+        product = ceil(current->x * current->y);
+        if (product == ceil(area)) {
+            count++;
+        }
         
-        
-
 		data = nextElement(&itr);
 	}
 
-    printf("Returning...\n");
     return count;
 }
 
 // Function that returns the number of all circles with the specified area
 int numCirclesWithArea(SVGimage* img, float area) {
-    return 0;
+    if (img == NULL)
+        return 0;
+    if (area < 0)
+        return 0;
+
+    int count = 0;
+    ListIterator itr = createIterator(img->circles);
+    void* data = nextElement(&itr);
+
+    Circle* current = (Circle*) data;
+    int product = 0;
+
+    while (data != NULL)
+	{
+        current = (Circle*) data;
+        product = ceil(current->r * current->r * PI);
+        if (product == ceil(area)) {
+            count++;
+        }
+        
+		data = nextElement(&itr);
+	}
+
+    return count;
 }
 
 // Function that returns the number of all paths with the specified data - i.e. Path.data field
 int numPathsWithdata(SVGimage* img, char* data) {
-    return 0;
+    if (img == NULL)
+        return 0;
+    if (checkFileName(data) == NULL)
+        return 0;
+
+    int count = 0;
+    ListIterator itr = createIterator(img->paths);
+    void* node = nextElement(&itr);
+
+    Path* current = (Path*) node;
+
+    while (node != NULL)
+	{
+        current = (Path*) node;
+        if (strcmp(current->data, data) == 0) {
+            count++;
+        }
+        
+		node = nextElement(&itr);
+	}
+
+    return count;
 }
 
+// Function that returns the total number of Attribute structs in the SVGimage - i.e. the number of Attributes
+//    contained in all otherAttributes lists in the structs making up the SVGimage
 int numAttr(SVGimage* img) {
-    return 0;
+    int count = 0;
+
+    
+
+    return count;
+}
+
+//Recursively go through each group and check the length of all the lists in each node.
+int getSumWithLen(List* groups, int len) {
+    int count = 0;
+    int sum = 0;
+
+    ListIterator itr = createIterator(groups);
+    void* node = nextElement(&itr);
+
+    Group* group = (Group*) node;
+
+    while (node != NULL)
+	{
+        sum = 0;
+        group = (Group*) node;
+        
+        sum += getLength(group->rectangles);
+        sum += getLength(group->circles);
+        sum += getLength(group->paths);
+        sum += getLength(group->groups);
+        if (sum == len)
+            count++;
+
+        if (getLength(group->groups) > 0) {
+            count += getSumWithLen(group->groups, len);
+        }
+        
+		node = nextElement(&itr);
+	}
+    
+    return count;
 }
 
 // Function that returns the number of all groups with the specified length - see A1 Module 2 for details
 int numGroupsWithLen(SVGimage* img, int len) {
-    //Use getLength() in linkedlistapi
-    return 0;
+    if (img == NULL)
+        return 0;
+    if (len < 0)
+        return 0;
+
+    int count = 0;
+
+    if (getLength(img->groups) > 0) {
+        count = getSumWithLen(img->groups, len);
+    }
+
+    return count;
 }
 
 //How to free an Attribute struct
@@ -604,7 +694,7 @@ char* groupToString( void* data) {
     char *g_path_attr_string = toString(group->paths);
     char *g_g_attr_string = toString(group->groups);
 
-    char* string = malloc( 7 + (12 + strlen(group_attr_string) + 1) + (strlen(g_rect_attr_string) + 2) + (strlen(g_circle_attr_string) + 2) + (strlen(g_path_attr_string) + 2) + (strlen(g_path_attr_string) + 2 + 22 + 1));
+    char* string = malloc(7 + (12 + strlen(group_attr_string) + 1) + (strlen(g_rect_attr_string) + 2) + (strlen(g_circle_attr_string) + 2) + (strlen(g_path_attr_string) + 2) + (strlen(g_g_attr_string) + 2 + 22 + 1));
     
     sprintf(string, "Group:\nAttributes:\n%s\n\t%s\n\t%s\n\t%s\n\t%s\n----------End of Group",
                 group_attr_string, g_rect_attr_string, g_circle_attr_string, g_path_attr_string, g_g_attr_string);
@@ -742,9 +832,9 @@ int comparePaths(const void *first, const void *second) {
 
 int main() {
     char* file = malloc(20);
-    //strcpy(file, "quad01.svg");
+    strcpy(file, "quad01.svg");
     //strcpy(file, "Emoji_poo.svg");
-    strcpy(file, "rect.svg");
+    //strcpy(file, "rect.svg");
     //strcpy(file, "circle.svg");
     SVGimage* img = createSVGimage(file);
 
@@ -752,6 +842,15 @@ int main() {
 
     int test = numRectsWithArea(img, 100);
     printf("Number of rectangles with area 100 = %d\n", test);
+
+    test = numCirclesWithArea(img, 315);
+    printf("Number of circles with area 314 = %d\n", test);
+
+    test = numPathsWithdata(img, "m28.8 34.3c0 4-3.2 7.2-7.2 7.2-4 0-7.2-3.2-7.2-7.2 0-4 3.2-7.2 7.2-7.2 4 0 7.2 3.2 7.2 7.2");
+    printf("Number of paths = %d\n", test);
+
+    test = numGroupsWithLen(img, 3);
+    printf("numGroups = %d\n", test);
 
     deleteSVGimage(img);
 

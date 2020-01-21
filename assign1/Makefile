@@ -1,6 +1,6 @@
 UNAME := $(shell uname)
 CC = gcc
-CFLAGS = -Wall -std=c11 -g -lxml2
+CFLAGS = -Wall -std=c11 -g -lxml2 -lm
 LDFLAGS= -L. 
 
 BIN = ./bin/

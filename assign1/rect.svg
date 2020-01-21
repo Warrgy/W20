@@ -11,5 +11,7 @@
         fill="none" stroke="blue" stroke-width="1cm" />
   <rect x="100" y="200" width="1198" height="598"
         fill="none" stroke="red"  />
+  <rect x="10cm" y="10cm" width="1198cm" height="5298cm"
+        fill="none" stroke="blue" stroke-width="1cm" />
         
 </svg>
