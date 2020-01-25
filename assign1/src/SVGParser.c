@@ -17,10 +17,9 @@
 
 //Make sure the file name that is given, will be valid
 static char* checkFileName(char *file) {
-    int length = strlen(file);
     if (file == NULL)
         return NULL;
-    
+    int length = strlen(file);
     if (length == 0)
         return NULL;
 
@@ -91,10 +90,10 @@ static const unsigned char* checkNameSpace(xmlNs* namespace) {
 
 //Will make the string entirely lower case.
 static char* checkUppLowCase(char* string) {
-    int length = strlen(string);
+    /*int length = strlen(string);
     for (int i = 0; i < length; i++) {
-        putchar(tolower(string[i]));
-    }
+        string[i] = tolower(string[i]);
+    }*/
     return string;
 }
 
@@ -474,6 +473,8 @@ void deleteSVGimage(SVGimage* img) {
 
 //Prints a list
 static void printList(List* type) {
+    if (type == NULL)
+        return;
     char* string = toString(type);
 
     printf("string = %s\n", string);
@@ -483,12 +484,13 @@ static void printList(List* type) {
 
 //Traverse through the list and add all nodes to the new list.
 static void addListElemToDiffList(List* new, List* old) {
+    if (new == NULL || old == NULL)
+        return;
     List* copy = old;
     ListIterator itr = createIterator(copy);
     void* node = nextElement(&itr);
     while (node != NULL)
 	{
-        printf("inserting a node into new list\n");
         insertBack(new, node);
         
 		node = nextElement(&itr);
@@ -578,6 +580,65 @@ List* getPaths(SVGimage* img) {
     return paths;
 }
 
+/**This function will return the number of times either rectangle, circle or path is equal to its corresponding set of data.
+ *This function is very generic and will only work if you are trying to find:
+ *
+ * Rectangle -> Area
+ * Circle -> Area
+ * Path -> data (string)
+ *
+ * 
+**/
+static int numGWithArea(List* list, int area, char* pathData, char type, const char wanted) {
+    if (list == NULL)
+        return 0;
+    int count = 0;
+    ListIterator itr = createIterator(list);
+    void* data = nextElement(&itr);
+
+
+	while (data != NULL)
+	{
+        //Current node = rectangle and that is wanted. Find out if it equals area
+        if (type == 'r' && wanted == 'r') {
+            if (area < 0)  //Shouldn't be needed, but mind as well check
+                return 0;
+            Rectangle* current = (Rectangle*) data;
+            int product = ceil(current->height * current->width);
+            if (product == area) {
+                count++;
+            }
+        //Current node = circle and that is wanted. Find out if it equals area
+        } else if (type == 'c' && wanted == 'c') {
+            if (area < 0)  //Shouldn't be needed, but mind as well check
+                return 0;
+            Circle* current = (Circle*) data;
+            int total = ceil(current->r * current->r * PI);
+            if (total == area) {
+                count++;
+            }
+        //Current node = path and that is wanted. Find out if it equals the data
+        } else if (type == 'p' && wanted == 'p') {
+            if (pathData == NULL)  //Shouldn't be needed, but mind as well check
+                return 0;
+            Path* path = (Path*) data;
+            if (strcmp(pathData, path->data) == 0) {
+                count++;
+            }
+        //Check all the lists in the groups and check rectangles or circles
+        } else if (type == 'g') {
+            Group* g = (Group*) data;
+            count += numGWithArea(g->rectangles, area, NULL, 'r', wanted);
+            count += numGWithArea(g->circles, area, NULL, 'c', wanted);
+            count += numGWithArea(g->paths, -1, NULL, 'p', wanted);
+            count += numGWithArea(g->groups, area, pathData, 'g', wanted);
+        }
+        
+		data = nextElement(&itr);
+	}
+    return count;
+}
+
 // Function that returns the number of all rectangles with the specified area
 int numRectsWithArea(SVGimage* img, float area) {
     if (img == NULL)
@@ -596,13 +657,16 @@ int numRectsWithArea(SVGimage* img, float area) {
 	{
         //Check if the rectangle has the area specified
         current = (Rectangle*) data;
-        product = ceil(current->x * current->y);
+        product = ceil(current->height * current->width);
         if (product == ceil(area)) {
             count++;
         }
         
 		data = nextElement(&itr);
 	}
+    
+    //Count all the rectangles with the area inside the groups.
+    count += numGWithArea(img->groups, ceil(area), NULL, 'g', 'r');
 
     return count;
 }
@@ -633,6 +697,9 @@ int numCirclesWithArea(SVGimage* img, float area) {
 		data = nextElement(&itr);
 	}
 
+    //Count all the circles with the area inside the groups.
+    count += numGWithArea(img->groups, ceil(area), NULL, 'g', 'c');
+
     return count;
 }
 
@@ -660,12 +727,17 @@ int numPathsWithdata(SVGimage* img, char* data) {
 		node = nextElement(&itr);
 	}
 
+    //Count all the paths with the data inside the groups.
+    count += numGWithArea(img->groups, -1, data, 'g', 'p');
+
     return count;
 }
 
 //Get the number of atttributes for the current list. If you are given a rectangle, circle or path list, then call the function again
 //   with the attribute list.
 static int getAttrNum(List* list, char type) {
+    if (list == NULL)
+        return 0;
     int count = 0;
 
     List* temp = list;
@@ -728,6 +800,8 @@ static int getAttrFromGroup(List* list) {
 // Function that returns the total number of Attribute structs in the SVGimage - i.e. the number of Attributes
 //    contained in all otherAttributes lists in the structs making up the SVGimage
 int numAttr(SVGimage* img) {
+    if (img == NULL)
+        return 0;
     int count = 0;
 
     //Get the count of all attributes in everything but groups
@@ -744,6 +818,10 @@ int numAttr(SVGimage* img) {
 
 //Recursively go through each group and check the length of all the lists in each node.
 int getSumWithLen(List* groups, int len) {
+    if (groups == NULL)
+        return 0;
+    if (len < 0)
+        return 0;
     int count = 0;
     int sum = 0;
 
@@ -792,6 +870,8 @@ int numGroupsWithLen(SVGimage* img, int len) {
 
 //How to free an Attribute struct
 void deleteAttribute( void* data) {
+    if (data == NULL)
+        return;
     Attribute* attr = (Attribute*) data;
     free(attr->name);
     free(attr->value);
@@ -800,6 +880,8 @@ void deleteAttribute( void* data) {
 
 //How to represent the data in an Attribute struct in terms of a string
 char* attributeToString( void* data) {
+    if (data == NULL)
+        return NULL;
     Attribute* attr = (Attribute*) data;
     char* string = malloc(  strlen(attr->name) + 3 +
                             strlen(attr->value) + 3 +
@@ -812,6 +894,8 @@ char* attributeToString( void* data) {
 
 //How to compare Attributes
 int compareAttributes(const void *first, const void *second) {
+    if (first == NULL || second == NULL)
+        return 0;
     const Attribute* one = (const Attribute*) first;
     const Attribute* two = (const Attribute*) second;
 
@@ -827,6 +911,8 @@ int compareAttributes(const void *first, const void *second) {
 
 //How to free a group struct
 void deleteGroup(void* data) {
+    if (data == NULL)
+        return;
     Group* group = (Group*) data;
 
     clearList(group->rectangles);
@@ -849,6 +935,8 @@ void deleteGroup(void* data) {
 
 //How to represent the data in a Group struct in terms of a string
 char* groupToString( void* data) {
+    if (data == NULL)
+        return NULL;
     Group* group = (Group*) data;
     List *group_attr = group->otherAttributes;
     char *group_attr_string = toString(group_attr);
@@ -872,19 +960,13 @@ char* groupToString( void* data) {
 
 //How to compare Groups
 int compareGroups(const void *first, const void *second) {
-    //TODO: finish this up. I think you have to use the compare in the List struct to do it. idk
-    /*const Group* one = (const Group*) first;
-    const Group* two = (const Group*) second;
-    List* one_rec = one->rectangles;
-    List* two_rec = two->rectangles;*/
-
-    //if (one_rec->compare(one->rectangles, two->rectangles) == 0)
-      //  if ()
     return 0;
 }
 
 //How to free a rectangle struct
 void deleteRectangle(void* data) {
+    if (data == NULL)
+        return;
     Rectangle* rect = (Rectangle*) data;
 
     clearList(rect->otherAttributes);
@@ -895,6 +977,8 @@ void deleteRectangle(void* data) {
 
 //How to represent the data in a Rectangle struct in terms of a string
 char* rectangleToString(void* data) {
+    if (data == NULL)
+        return NULL;
     Rectangle* rect = (Rectangle*) data;
     List* rect_attr = rect->otherAttributes;
     char* rect_attr_string = toString(rect_attr);
@@ -910,6 +994,8 @@ char* rectangleToString(void* data) {
 
 //How to compare Rectangles
 int compareRectangles(const void *first, const void *second) {
+    if (first == NULL || second == NULL)
+        return 0;
     //TODO: add compare for the units also
     const Rectangle* one = (const Rectangle* ) first;
     const Rectangle* two = (const Rectangle* ) second;
@@ -924,6 +1010,8 @@ int compareRectangles(const void *first, const void *second) {
 
 //How to free a circle struct
 void deleteCircle(void* data) {
+    if (data == NULL)
+        return;
     Circle *c = (Circle*) data;
 
     clearList(c->otherAttributes);
@@ -934,6 +1022,8 @@ void deleteCircle(void* data) {
 
 //How to represent the data in a Circle struct in terms of a string
 char* circleToString(void* data) {
+    if (data == NULL)
+        return NULL;
     Circle *circle = (Circle*) data;
     List* circle_attr = circle->otherAttributes;
     char* circle_attr_string = toString(circle_attr);
@@ -949,6 +1039,8 @@ char* circleToString(void* data) {
 
 //How to compare Circles
 int compareCircles(const void *first, const void *second) {
+    if (first == NULL || second == NULL)
+        return 0;
     const Circle *one = (const Circle*) first;
     const Circle *two = (const Circle*) second;
 
@@ -961,6 +1053,8 @@ int compareCircles(const void *first, const void *second) {
 
 //How to free a path struct
 void deletePath(void* data) {
+    if (data == NULL)
+        return;
     Path *path = (Path*) data;
 
     free(path->data);
@@ -972,6 +1066,8 @@ void deletePath(void* data) {
 
 //How to represent the data in a Path struct in terms of a string
 char* pathToString(void* data) {
+    if (data == NULL)
+        return NULL;
     Path *path = (Path*) data;
     List* path_attr = path->otherAttributes;
     char* path_attr_string = toString(path_attr);
@@ -987,6 +1083,8 @@ char* pathToString(void* data) {
 
 //How to compare Paths
 int comparePaths(const void *first, const void *second) {
+    if (first == NULL || second == NULL)
+        return 0;
     const Path* one = (const Path*) first;
     const Path* two = (const Path*) second;
 
@@ -994,12 +1092,14 @@ int comparePaths(const void *first, const void *second) {
 }
 
 int main() {
-    char* file = malloc(20);
+    char* file = malloc(30);
     //strcpy(file, "quad01.svg");
-    strcpy(file, "Emoji_poo.svg");
+    //strcpy(file, "Emoji_poo.svg");
+    strcpy(file, "Emoji_smiling.svg");
     //strcpy(file, "rect.svg");
     //strcpy(file, "circle.svg");
     //strcpy(file, "Big.svg");
+    //strcpy(file,"rect.svg");
     SVGimage* img = createSVGimage(file);
 
     char* details = SVGimageToString(img);
@@ -1011,16 +1111,16 @@ int main() {
     // clearList(temp);
     // freeList(temp);
 
-    printf("Calculating the number of attributes...\n");
-    printf("there are %d attributes\n", numAttr(img));
+    // printf("Calculating the number of attributes...\n");
+    // printf("there are %d attributes\n", numAttr(img));
 
     // printf("finding the rectangles\n");
 
-    // int test = numRectsWithArea(img, 100);
-    // printf("Number of rectangles with area 100 = %d\n", test);
+    // int test = numRectsWithArea(img, 716404.00);
+    // printf("Number of rectangles with area = %d\n", test);
 
-    // test = numCirclesWithArea(img, 315);
-    // printf("Number of circles with area 314 = %d\n", test);
+    int test = numCirclesWithArea(img, 201.06);
+    printf("Number of circles with area = %d\n", test);
 
     // test = numPathsWithdata(img, "m28.8 34.3c0 4-3.2 7.2-7.2 7.2-4 0-7.2-3.2-7.2-7.2 0-4 3.2-7.2 7.2-7.2 4 0 7.2 3.2 7.2 7.2");
     // printf("Number of paths = %d\n", test);
