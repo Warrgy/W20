@@ -13,5 +13,13 @@
         fill="none" stroke="red"  />
   <rect x="10cm" y="10cm" width="1198cm" height="5298cm"
         fill="none" stroke="blue" stroke-width="1cm" />
+  <g>
+      <rect x="10cm" y="10cm" width="1198cm" height="5298cm"
+        fill="none" stroke="purple" stroke-width="1cm" />
+      <g>
+            <rect x="5cm" y="1cm" width="12cm" height="10cm"
+                  fill="none" stroke="indigo" stroke-width="1cm" />
+      </g>
+  </g>
         
 </svg>

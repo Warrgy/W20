@@ -319,7 +319,7 @@ SVGimage* convertXMLtoSVG(xmlNode* a_node, SVGimage* image) {
             //if name = rect, while not in g
             if (strcmp((char*)(cur_node->name),(char*)"rect") == 0) {
                 if (strcmp((char*) (paren->name), (char*)"g") != 0) {
-                    addRectangleToList(cur_node, getRects(image));
+                    addRectangleToList(cur_node, image->rectangles);
                 }
             }
 
@@ -327,7 +327,7 @@ SVGimage* convertXMLtoSVG(xmlNode* a_node, SVGimage* image) {
             if (strcmp((char*)(cur_node->name), (char*)"circle") == 0) {
                 if (strcmp((char*)(paren->name), (char*)"g") != 0) {
                     //circle, parent is not a g.
-                    addCircleToList(cur_node, getCircles(image));
+                    addCircleToList(cur_node, image->circles);
                 }
                 //circle, but parent is a g
             }
@@ -336,7 +336,7 @@ SVGimage* convertXMLtoSVG(xmlNode* a_node, SVGimage* image) {
             if (strcmp((char*)(cur_node->name), (char*)"path") == 0) {
                 if (strcmp((char*)(paren->name), (char*)"g") != 0) {
                     //path, but parent is not a g
-                    addPathToList(cur_node, getPaths(image));
+                    addPathToList(cur_node, image->paths);
                 }
                 //path, but parent is a g
             }
@@ -344,7 +344,7 @@ SVGimage* convertXMLtoSVG(xmlNode* a_node, SVGimage* image) {
             //If a group then add to group list
             if (strcmp((char*)(cur_node->name), (char*)"g") == 0) {
                 if (strcmp((char*)(paren->name), (char*)"g") != 0) {
-                    addGroupToList(cur_node, getGroups(image));
+                    addGroupToList(cur_node, image->groups);
                 }
             }
         
@@ -395,10 +395,6 @@ SVGimage* createSVGimage(char* fileName) {
     SVGimage* image = initializeSVG(root);
     if (image == NULL)
         return NULL;
-
-    char* details = SVGimageToString(image);
-    printf("\nDetails:\n%s\n", details);
-    free(details);
     
     xmlFreeDoc(doc);
     xmlCleanupParser();
@@ -459,32 +455,99 @@ void deleteSVGimage(SVGimage* img) {
     free(img);
 }
 
+void printList(List* type) {
+    char* string = toString(type);
+
+    printf("string = %s\n", string);
+
+    free(string);
+}
+
+void addListElemToDiffList(List* new, List* old) {
+    List* copy = old;
+    ListIterator itr = createIterator(copy);
+    void* node = nextElement(&itr);
+    while (node != NULL)
+	{
+        printf("inserting a node into new list\n");
+        insertBack(new, node);
+        
+		node = nextElement(&itr);
+        printList(copy);
+	}
+}
+
+void addGListsToList(List* new, List* old, char type) {
+    if (old == NULL)
+        return;
+    List* groups = old;
+
+    ListIterator itr = createIterator(groups);
+    void* node = nextElement(&itr);
+
+    while (node != NULL)
+	{
+        Group* group = (Group*) node;
+        if (type == 'r') {
+            addListElemToDiffList(new, group->rectangles);
+        } else if (type == 'c') {
+            addListElemToDiffList(new, group->circles);
+        } else if (type == 'p') {
+            addListElemToDiffList(new, group->paths);
+        } else if (type == 'g') {
+            addListElemToDiffList(new, group->groups);
+        }
+        addGListsToList(new, group->groups, type);
+		node = nextElement(&itr);
+	}
+}
+
 // Function that returns a list of all rectangles in the image.
 List* getRects(SVGimage* img) {
     if (img == NULL)
         return NULL;
-    return img->rectangles;
+    List* rects = initializeList(&rectangleToString, &deleteRectangle, &compareRectangles);
+    
+    addListElemToDiffList(rects, img->rectangles);
+    addGListsToList(rects, img->groups, 'r');
+
+    return rects;
 }
 
 // Function that returns a list of all circles in the image.
 List* getCircles(SVGimage* img) {
     if (img == NULL)
         return NULL;
-    return img->circles;
+    List* circ = initializeList(&circleToString, &deleteCircle, &compareCircles);
+
+    addListElemToDiffList(circ, img->circles);
+    addGListsToList(circ, img->groups, 'c');
+
+    return circ;
 }
 
 // Function that returns a list of all groups in the image.
 List* getGroups(SVGimage* img) {
     if (img == NULL)
         return NULL;
-    return img->groups;
+    List* group = initializeList(&groupToString, &deleteGroup, &compareGroups);
+
+    addListElemToDiffList(group, img->groups);
+    addGListsToList(group, img->groups, 'g');
+    
+    return group;
 }
 
 // Function that returns a list of all paths in the image.
 List* getPaths(SVGimage* img) {
     if (img == NULL)
         return NULL;
-    return img->paths;
+    List* paths = initializeList(&pathToString, &deletePath, &comparePaths);
+
+    addListElemToDiffList(paths, img->paths);
+    addGListsToList(paths, img->groups, 'p');
+
+    return paths;
 }
 
 // Function that returns the number of all rectangles with the specified area
@@ -569,12 +632,75 @@ int numPathsWithdata(SVGimage* img, char* data) {
     return count;
 }
 
+//Get the number of atttributes for the current list. If you are given a rectangle, circle or path list, then call the function again
+//   with the attribute list.
+int getAttrNum(List* list, char type) {
+    
+    int count = 0;
+
+    List* temp = list;
+    ListIterator itr = createIterator(temp);
+    void* node = nextElement(&itr);
+
+    while (node != NULL)
+	{
+        if (type == 'r') {
+            Rectangle* r = (Rectangle*) node;
+            count += getAttrNum(r->otherAttributes, 'a');
+        } else if (type == 'c') {
+            Circle* c = (Circle*) node;
+            count += getAttrNum(c->otherAttributes, 'a');
+        } else if (type == 'p') {
+            Path* p = (Path*) node;
+            count += getAttrNum(p->otherAttributes, 'a');
+        } else if (type == 'a') {
+            count++;
+        }
+        
+		node = nextElement(&itr);
+	}
+
+    return count;
+}
+
+//A function to just recursively go through the group struct, and at each stage just call getAttrNum() to get the 
+//  attributes of the rects, circles, paths, and groups. 
+int getAttrFromGroup(List* list) {
+    if (list == NULL)
+        return 0;
+    int count = 0;
+
+    List* temp = list;
+    ListIterator itr = createIterator(temp);
+    void* node = nextElement(&itr);
+
+    while (node != NULL)
+	{
+        Group* g = (Group*) node;
+
+        count += getAttrNum(g->rectangles, 'r');
+        count += getAttrNum(g->circles, 'c');
+        count += getAttrNum(g->paths, 'p');
+        count += getAttrNum(g->otherAttributes, 'a');
+
+        count += getAttrFromGroup(g->groups);
+		node = nextElement(&itr);
+	}
+
+    return count;
+}
+
 // Function that returns the total number of Attribute structs in the SVGimage - i.e. the number of Attributes
 //    contained in all otherAttributes lists in the structs making up the SVGimage
 int numAttr(SVGimage* img) {
     int count = 0;
 
-    
+    count += getAttrNum(img->rectangles, 'r');
+    count += getAttrNum(img->circles, 'c');
+    count += getAttrNum(img->paths, 'p');
+    count += getAttrNum(img->otherAttributes, 'a');
+
+    count += getAttrFromGroup(img->groups);
 
     return count;
 }
@@ -832,25 +958,38 @@ int comparePaths(const void *first, const void *second) {
 
 int main() {
     char* file = malloc(20);
-    strcpy(file, "quad01.svg");
-    //strcpy(file, "Emoji_poo.svg");
+    //strcpy(file, "quad01.svg");
+    strcpy(file, "Emoji_poo.svg");
     //strcpy(file, "rect.svg");
     //strcpy(file, "circle.svg");
+    //strcpy(file, "Big.svg");
     SVGimage* img = createSVGimage(file);
 
-    printf("finding the rectangles\n");
+    char* details = SVGimageToString(img);
+    printf("\nDetails:\n%s\n", details);
+    free(details);
 
-    int test = numRectsWithArea(img, 100);
-    printf("Number of rectangles with area 100 = %d\n", test);
+    // List* temp = getGroups(img);
+    // temp=temp;
+    // clearList(temp);
+    // freeList(temp);
 
-    test = numCirclesWithArea(img, 315);
-    printf("Number of circles with area 314 = %d\n", test);
+    printf("Calculating the number of attributes...\n");
+    printf("there are %d attributes\n", numAttr(img));
 
-    test = numPathsWithdata(img, "m28.8 34.3c0 4-3.2 7.2-7.2 7.2-4 0-7.2-3.2-7.2-7.2 0-4 3.2-7.2 7.2-7.2 4 0 7.2 3.2 7.2 7.2");
-    printf("Number of paths = %d\n", test);
+    // printf("finding the rectangles\n");
 
-    test = numGroupsWithLen(img, 3);
-    printf("numGroups = %d\n", test);
+    // int test = numRectsWithArea(img, 100);
+    // printf("Number of rectangles with area 100 = %d\n", test);
+
+    // test = numCirclesWithArea(img, 315);
+    // printf("Number of circles with area 314 = %d\n", test);
+
+    // test = numPathsWithdata(img, "m28.8 34.3c0 4-3.2 7.2-7.2 7.2-4 0-7.2-3.2-7.2-7.2 0-4 3.2-7.2 7.2-7.2 4 0 7.2 3.2 7.2 7.2");
+    // printf("Number of paths = %d\n", test);
+
+    // test = numGroupsWithLen(img, 3);
+    // printf("numGroups = %d\n", test);
 
     deleteSVGimage(img);
 
