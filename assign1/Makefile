@@ -15,7 +15,7 @@ ifeq ($(UNAME), Darwin)
 endif
 
 
-all: SVGParser
+parser: SVGParser
 	
 SVGParser: $(BIN)SVGParser.o libsvgparse.so $(SRC)SVGParser.c
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $(BIN)SVGParser $(BIN)*.o #-llist

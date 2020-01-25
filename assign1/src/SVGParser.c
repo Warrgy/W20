@@ -9,30 +9,32 @@
  */
 
 #include <math.h>
+#include <ctype.h>
 #include "SVGParser.h"
 #include "LinkedListAPI.h"
 
 #define PI 3.1415926535
 
 //Make sure the file name that is given, will be valid
-char* checkFileName(char *file) {
+static char* checkFileName(char *file) {
+    int length = strlen(file);
     if (file == NULL)
         return NULL;
     
-    if (strlen(file) == 0)
+    if (length == 0)
         return NULL;
 
     if (strcmp(file, "") == 0)
         return NULL;
 
-    if(file[0] == 0 && file[strlen(file)] == 0) 
+    if(file[0] == 0 && file[length] == 0) 
         return NULL;
 
     return file;
 }
 
 //Get the xmlDoc from the file, via xmllib2
-xmlDoc* getDocViaFile(char *fileName) {
+static xmlDoc* getDocViaFile(char *fileName) {
     xmlDoc* doc = NULL;
 
     LIBXML_TEST_VERSION
@@ -46,7 +48,7 @@ xmlDoc* getDocViaFile(char *fileName) {
 }
 
 //Checks to make sure the char can fit in a char[256] array
-const unsigned char* checkLengthChar(const unsigned char *string) {
+static const unsigned char* checkLengthChar(const unsigned char *string) {
     if (string == NULL)
         return NULL;
     
@@ -60,7 +62,7 @@ const unsigned char* checkLengthChar(const unsigned char *string) {
 }
 
 //Check the title string from the node and return
-char* checkTitle(xmlNode* titleNode) {
+static char* checkTitle(xmlNode* titleNode) {
     if (titleNode == NULL)
         return NULL;
     xmlNode* node = titleNode;
@@ -69,7 +71,7 @@ char* checkTitle(xmlNode* titleNode) {
 }
 
 //Get the description from the node
-char* checkDescription(xmlNode* descNode) {
+static char* checkDescription(xmlNode* descNode) {
     if (descNode == NULL)
         return NULL;
     xmlNode *node = descNode;
@@ -78,7 +80,7 @@ char* checkDescription(xmlNode* descNode) {
 }
 
 //Basically get the namespace string from the node
-const unsigned char* checkNameSpace(xmlNs* namespace) {
+static const unsigned char* checkNameSpace(xmlNs* namespace) {
     if (namespace == NULL)
         return NULL;
     xmlNs* value = namespace;
@@ -87,8 +89,17 @@ const unsigned char* checkNameSpace(xmlNs* namespace) {
     return checkLengthChar(URL);
 }
 
+//Will make the string entirely lower case.
+static char* checkUppLowCase(char* string) {
+    int length = strlen(string);
+    for (int i = 0; i < length; i++) {
+        putchar(tolower(string[i]));
+    }
+    return string;
+}
+
 //Will create and add an attribute to the list of attributes given
-void addAttribute(const unsigned char* attr_name, const unsigned char* attr_value, List* listOfAttributes) {
+static void addAttribute(const unsigned char* attr_name, const unsigned char* attr_value, List* listOfAttributes) {
     if (attr_name == NULL || attr_value == NULL)
         return;
     List* list = listOfAttributes;
@@ -104,7 +115,7 @@ void addAttribute(const unsigned char* attr_name, const unsigned char* attr_valu
 }
 
 //Will convert the string to a float, will also check for units
-float stringToFloat(char* string, char units[50]) {
+static float stringToFloat(char* string, char units[50]) {
     if (string == NULL)
         return 0.0;
     int length = strlen(string);
@@ -124,19 +135,19 @@ float stringToFloat(char* string, char units[50]) {
 }
 
 //Will create a rectangle with the information provided
-void addRectangle(char* name, xmlNode* data, Rectangle* rectangle) {
+static void addRectangle(char* name, xmlNode* data, Rectangle* rectangle) {
     Rectangle* rect = rectangle;
     char* value = (char*)data->content;
 
     if (name == NULL || data == NULL)
         return;
-    if (strcmp(name,"x") == 0) {
+    if (strcmp(checkUppLowCase(name),"x") == 0) {
         rect->x = stringToFloat(value, rect->units);
-    } else if (strcmp(name, "y") == 0) {
+    } else if (strcmp(checkUppLowCase(name), "y") == 0) {
         rect->y = stringToFloat(value, rect->units);
-    } else if (strcmp(name, "width") == 0) {
+    } else if (strcmp(checkUppLowCase(name), "width") == 0) {
         rect->width = stringToFloat(value, rect->units);
-    } else if (strcmp(name, "height") == 0) {
+    } else if (strcmp(checkUppLowCase(name), "height") == 0) {
         rect->height = stringToFloat(value, rect->units);
     } else {
         //Attributes of the rectangle
@@ -147,7 +158,7 @@ void addRectangle(char* name, xmlNode* data, Rectangle* rectangle) {
 }
 
 //Will create a rectangle with the information in the node provided and add it to the list.
-void addRectangleToList(xmlNode* node, List* rectList) {
+static void addRectangleToList(xmlNode* node, List* rectList) {
     Rectangle *rect = malloc(sizeof(Rectangle));
 
     rect->otherAttributes = initializeList(&attributeToString, &deleteAttribute, &compareAttributes);
@@ -162,15 +173,15 @@ void addRectangleToList(xmlNode* node, List* rectList) {
 }
 
 //Will create a circle with the information provided
-void addCircle(char *name, xmlNode *data, Circle *circle) {
+static void addCircle(char *name, xmlNode *data, Circle *circle) {
     Circle* circ = circle;
     char* value = (char*)data->content;
 
-    if (strcmp(name, "cx") == 0) {
+    if (strcmp(checkUppLowCase(name), "cx") == 0) {
         circ->cx = stringToFloat(value, circ->units);
-    } else if (strcmp(name, "cy") == 0) {
+    } else if (strcmp(checkUppLowCase(name), "cy") == 0) {
         circ->cy = stringToFloat(value, circ->units);
-    } else if (strcmp(name, "r") == 0) {
+    } else if (strcmp(checkUppLowCase(name), "r") == 0) {
         circ->r = stringToFloat(value, circ->units);
     } else {
         List* svgImageAttributes = circ->otherAttributes;
@@ -180,7 +191,7 @@ void addCircle(char *name, xmlNode *data, Circle *circle) {
 }
 
 //Will create a circle with the information in the node provided and add it to the list.
-void addCircleToList(xmlNode* node, List* circList) {
+static void addCircleToList(xmlNode* node, List* circList) {
     Circle *circle = malloc(sizeof(Circle));
 
     circle->otherAttributes = initializeList(&attributeToString, &deleteAttribute, &compareAttributes);
@@ -195,11 +206,11 @@ void addCircleToList(xmlNode* node, List* circList) {
 }
 
 //Will create a path with the information provided
-void addPath(char *name, xmlNode* data, Path* thePath) {
+static void addPath(char *name, xmlNode* data, Path* thePath) {
     Path* path = thePath;
     char* value = (char*)data->content;
 
-    if (strcmp(name, "d") == 0) {
+    if (strcmp(checkUppLowCase(name), "d") == 0) {
         path->data = malloc(strlen((char*)value) + 1);
         strcpy(path->data, value);
     } else {
@@ -210,7 +221,7 @@ void addPath(char *name, xmlNode* data, Path* thePath) {
 }
 
 //Will create a path with the information in the node provided and add it to the list.
-void addPathToList(xmlNode* node, List* pathList) {
+static void addPathToList(xmlNode* node, List* pathList) {
     Path *path = malloc(sizeof(Path));
 
     path->otherAttributes = initializeList(&attributeToString, &deleteAttribute, &compareAttributes);
@@ -223,7 +234,7 @@ void addPathToList(xmlNode* node, List* pathList) {
 }
 
 //Will create a group with the information provided (mean't for attributes)
-void addGroupAttributes(char* name, xmlNode* data, Group* theGroup) {
+static void addGroupAttributes(char* name, xmlNode* data, Group* theGroup) {
     Group* group = theGroup;
     List* svgImageAttributes = group->otherAttributes;
         
@@ -232,7 +243,7 @@ void addGroupAttributes(char* name, xmlNode* data, Group* theGroup) {
 }
 
 //Will create a group with the information in the node provided and add it to the list. If a group in a group happens, then we use recursion.
-void addGroupToList(xmlNode *node, List* groupList) {
+static void addGroupToList(xmlNode *node, List* groupList) {
     Group *group = malloc(sizeof(Group));
 
     //Initialize all lists before using
@@ -249,13 +260,13 @@ void addGroupToList(xmlNode *node, List* groupList) {
 
     //Add rectangles, circles, paths, and groups to each respective list
     for (xmlNode* child = node->children; child != NULL; child = child->next) {
-        if (strcmp((char*)(child->name), "rect") == 0) {
+        if (strcmp(checkUppLowCase((char*)(child->name)), "rect") == 0) {
             addRectangleToList(child, group->rectangles);
-        } else if (strcmp((char*)(child->name), "circle") == 0) {
+        } else if (strcmp(checkUppLowCase((char*)(child->name)), "circle") == 0) {
             addCircleToList(child, group->circles);
-        } else if (strcmp((char*)(child->name), "path") == 0) {
+        } else if (strcmp(checkUppLowCase((char*)(child->name)), "path") == 0) {
             addPathToList(child, group->paths);
-        } else if (strcmp((char*)(child->name), "g") == 0) {
+        } else if (strcmp(checkUppLowCase((char*)(child->name)), "g") == 0) {
             addGroupToList(child, group->groups);
         } else {
             //left blank for now
@@ -266,7 +277,7 @@ void addGroupToList(xmlNode *node, List* groupList) {
 }
 
 //This will go through the xml tree recursively and add the required information to the SVGimage struct.
-SVGimage* convertXMLtoSVG(xmlNode* a_node, SVGimage* image) {
+static SVGimage* convertXMLtoSVG(xmlNode* a_node, SVGimage* image) {
     xmlNode *cur_node = NULL;
 
     for (cur_node = a_node; cur_node != NULL; cur_node = cur_node->next) {
@@ -285,7 +296,7 @@ SVGimage* convertXMLtoSVG(xmlNode* a_node, SVGimage* image) {
             //if name = title
             //Add and check the TITLE to the SVGimage -------
             if (paren->name !=NULL) {
-                if (strcmp((char*)paren->name, (char*)"title") == 0) {
+                if (strcmp(checkUppLowCase((char*)paren->name), (char*)"title") == 0) {
                     if (checkTitle(cur_node) != NULL) {
                         strcpy(image->title, checkTitle(cur_node));
                     }
@@ -295,7 +306,7 @@ SVGimage* convertXMLtoSVG(xmlNode* a_node, SVGimage* image) {
 
                 //if name = desc
                 //Add and check the DESCRIPTION to the SVGimage ------
-                else if (strcmp((char*)paren->name, (char*)"desc") == 0) {
+                else if (strcmp(checkUppLowCase((char*)paren->name), (char*)"desc") == 0) {
                     if (checkDescription(cur_node) != NULL) {
                         strcpy(image->description, checkDescription(cur_node));
                     }
@@ -305,7 +316,7 @@ SVGimage* convertXMLtoSVG(xmlNode* a_node, SVGimage* image) {
 
             //if parent name = svg
             //Add all the attributes of the svg into the otherAtrributes list in the SVGimage.
-            if (strcmp((char*)cur_node->name,(char*)"svg") == 0) {
+            if (strcmp(checkUppLowCase((char*)cur_node->name),(char*)"svg") == 0) {
                 xmlAttr *attr_node = NULL;
                 List* svgImageAttributes = image->otherAttributes;
 
@@ -317,15 +328,15 @@ SVGimage* convertXMLtoSVG(xmlNode* a_node, SVGimage* image) {
             }
 
             //if name = rect, while not in g
-            if (strcmp((char*)(cur_node->name),(char*)"rect") == 0) {
-                if (strcmp((char*) (paren->name), (char*)"g") != 0) {
+            if (strcmp(checkUppLowCase((char*)(cur_node->name)),(char*)"rect") == 0) {
+                if (strcmp(checkUppLowCase((char*) (paren->name)), (char*)"g") != 0) {
                     addRectangleToList(cur_node, image->rectangles);
                 }
             }
 
             //if name = circle, not in g
-            if (strcmp((char*)(cur_node->name), (char*)"circle") == 0) {
-                if (strcmp((char*)(paren->name), (char*)"g") != 0) {
+            if (strcmp(checkUppLowCase((char*)(cur_node->name)), (char*)"circle") == 0) {
+                if (strcmp(checkUppLowCase((char*)(paren->name)), (char*)"g") != 0) {
                     //circle, parent is not a g.
                     addCircleToList(cur_node, image->circles);
                 }
@@ -333,8 +344,8 @@ SVGimage* convertXMLtoSVG(xmlNode* a_node, SVGimage* image) {
             }
 
             //if name = path, not in g
-            if (strcmp((char*)(cur_node->name), (char*)"path") == 0) {
-                if (strcmp((char*)(paren->name), (char*)"g") != 0) {
+            if (strcmp(checkUppLowCase((char*)(cur_node->name)), (char*)"path") == 0) {
+                if (strcmp(checkUppLowCase((char*)(paren->name)), (char*)"g") != 0) {
                     //path, but parent is not a g
                     addPathToList(cur_node, image->paths);
                 }
@@ -342,8 +353,8 @@ SVGimage* convertXMLtoSVG(xmlNode* a_node, SVGimage* image) {
             }
             
             //If a group then add to group list
-            if (strcmp((char*)(cur_node->name), (char*)"g") == 0) {
-                if (strcmp((char*)(paren->name), (char*)"g") != 0) {
+            if (strcmp(checkUppLowCase((char*)(cur_node->name)), (char*)"g") == 0) {
+                if (strcmp(checkUppLowCase((char*)(paren->name)), (char*)"g") != 0) {
                     addGroupToList(cur_node, image->groups);
                 }
             }
@@ -361,7 +372,7 @@ SVGimage* convertXMLtoSVG(xmlNode* a_node, SVGimage* image) {
 
 //This will initialize all the elements in the struct, and then fill the struct with all the data.
 //Will initialize all lists and set the title and description to blank strings.
-SVGimage* initializeSVG(xmlNode *a_node) {
+static SVGimage* initializeSVG(xmlNode *a_node) {
     SVGimage *image = malloc(sizeof(SVGimage));
     strcpy(image->description,"");
     strcpy(image->title,"");
@@ -401,7 +412,10 @@ SVGimage* createSVGimage(char* fileName) {
     return image;
 }
 
+//Will create a string to display the entire contents of the SVGimage struct
 char* SVGimageToString(SVGimage* img) {
+    if (img == NULL)
+        return NULL;
     char *string = NULL;
     char *svgAttr = toString(img->otherAttributes);
     char *rect_list = toString(img->rectangles);
@@ -430,7 +444,10 @@ char* SVGimageToString(SVGimage* img) {
     return string;
 }
 
+//Will free the entire SVGimage
 void deleteSVGimage(SVGimage* img) {
+    if (img == NULL)
+        return;
     //free groups
     clearList(img->groups);
     freeList(img->groups);
@@ -455,7 +472,8 @@ void deleteSVGimage(SVGimage* img) {
     free(img);
 }
 
-void printList(List* type) {
+//Prints a list
+static void printList(List* type) {
     char* string = toString(type);
 
     printf("string = %s\n", string);
@@ -463,7 +481,8 @@ void printList(List* type) {
     free(string);
 }
 
-void addListElemToDiffList(List* new, List* old) {
+//Traverse through the list and add all nodes to the new list.
+static void addListElemToDiffList(List* new, List* old) {
     List* copy = old;
     ListIterator itr = createIterator(copy);
     void* node = nextElement(&itr);
@@ -477,7 +496,8 @@ void addListElemToDiffList(List* new, List* old) {
 	}
 }
 
-void addGListsToList(List* new, List* old, char type) {
+//Recursively add all rectangles, circles, paths, or groups in the list. If there are, call addListElemToDiffList to actually add them.
+static void addGListsToList(List* new, List* old, char type) {
     if (old == NULL)
         return;
     List* groups = old;
@@ -508,7 +528,9 @@ List* getRects(SVGimage* img) {
         return NULL;
     List* rects = initializeList(&rectangleToString, &deleteRectangle, &compareRectangles);
     
+    //Get rectangles in the immediate image
     addListElemToDiffList(rects, img->rectangles);
+    //Add rectangles located in the groups
     addGListsToList(rects, img->groups, 'r');
 
     return rects;
@@ -520,7 +542,9 @@ List* getCircles(SVGimage* img) {
         return NULL;
     List* circ = initializeList(&circleToString, &deleteCircle, &compareCircles);
 
+    //Get circles in the immediate image
     addListElemToDiffList(circ, img->circles);
+    //Add circles located in the groups
     addGListsToList(circ, img->groups, 'c');
 
     return circ;
@@ -532,7 +556,9 @@ List* getGroups(SVGimage* img) {
         return NULL;
     List* group = initializeList(&groupToString, &deleteGroup, &compareGroups);
 
+    //Get groups in the immediate image
     addListElemToDiffList(group, img->groups);
+    //Add groups located in the groups
     addGListsToList(group, img->groups, 'g');
     
     return group;
@@ -544,7 +570,9 @@ List* getPaths(SVGimage* img) {
         return NULL;
     List* paths = initializeList(&pathToString, &deletePath, &comparePaths);
 
+    //Get paths in the immediate image
     addListElemToDiffList(paths, img->paths);
+    //Add paths located in the groups
     addGListsToList(paths, img->groups, 'p');
 
     return paths;
@@ -566,6 +594,7 @@ int numRectsWithArea(SVGimage* img, float area) {
 
 	while (data != NULL)
 	{
+        //Check if the rectangle has the area specified
         current = (Rectangle*) data;
         product = ceil(current->x * current->y);
         if (product == ceil(area)) {
@@ -594,6 +623,7 @@ int numCirclesWithArea(SVGimage* img, float area) {
 
     while (data != NULL)
 	{
+        //Check if the circle has the area specifiec
         current = (Circle*) data;
         product = ceil(current->r * current->r * PI);
         if (product == ceil(area)) {
@@ -621,6 +651,7 @@ int numPathsWithdata(SVGimage* img, char* data) {
 
     while (node != NULL)
 	{
+        //check if current node contains the data, if so, increment by 1
         current = (Path*) node;
         if (strcmp(current->data, data) == 0) {
             count++;
@@ -634,8 +665,7 @@ int numPathsWithdata(SVGimage* img, char* data) {
 
 //Get the number of atttributes for the current list. If you are given a rectangle, circle or path list, then call the function again
 //   with the attribute list.
-int getAttrNum(List* list, char type) {
-    
+static int getAttrNum(List* list, char type) {
     int count = 0;
 
     List* temp = list;
@@ -644,6 +674,7 @@ int getAttrNum(List* list, char type) {
 
     while (node != NULL)
 	{
+        //Call again for the attributes of the type
         if (type == 'r') {
             Rectangle* r = (Rectangle*) node;
             count += getAttrNum(r->otherAttributes, 'a');
@@ -653,6 +684,7 @@ int getAttrNum(List* list, char type) {
         } else if (type == 'p') {
             Path* p = (Path*) node;
             count += getAttrNum(p->otherAttributes, 'a');
+        //increase counter since we have an attribute here.
         } else if (type == 'a') {
             count++;
         }
@@ -665,7 +697,7 @@ int getAttrNum(List* list, char type) {
 
 //A function to just recursively go through the group struct, and at each stage just call getAttrNum() to get the 
 //  attributes of the rects, circles, paths, and groups. 
-int getAttrFromGroup(List* list) {
+static int getAttrFromGroup(List* list) {
     if (list == NULL)
         return 0;
     int count = 0;
@@ -678,12 +710,15 @@ int getAttrFromGroup(List* list) {
 	{
         Group* g = (Group*) node;
 
+        //Get attributes of everything but groups
         count += getAttrNum(g->rectangles, 'r');
         count += getAttrNum(g->circles, 'c');
         count += getAttrNum(g->paths, 'p');
         count += getAttrNum(g->otherAttributes, 'a');
 
+        //get attributes of everything inside the group
         count += getAttrFromGroup(g->groups);
+
 		node = nextElement(&itr);
 	}
 
@@ -695,11 +730,13 @@ int getAttrFromGroup(List* list) {
 int numAttr(SVGimage* img) {
     int count = 0;
 
+    //Get the count of all attributes in everything but groups
     count += getAttrNum(img->rectangles, 'r');
     count += getAttrNum(img->circles, 'c');
     count += getAttrNum(img->paths, 'p');
     count += getAttrNum(img->otherAttributes, 'a');
 
+    //Call recursive function to get all the attributes in every struct in the list of groups
     count += getAttrFromGroup(img->groups);
 
     return count;
