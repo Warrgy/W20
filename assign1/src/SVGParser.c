@@ -6,6 +6,8 @@
  * Email: cfishe08@uoguelph.ca
  * ID: 1057347
  * Date: Jan 28, 2020
+ *
+ * Portions of this code were based off LinkedListAPI.c
  */
 
 #include <math.h>
@@ -1089,51 +1091,4 @@ int comparePaths(const void *first, const void *second) {
 
     return strcmp(one->data, two->data);
 }
-/*
-int main() {
-    char* file = malloc(30);
-    //strcpy(file, "quad01.svg");
-    //strcpy(file, "Emoji_poo.svg");
-    //strcpy(file, "Emoji_smiling.svg");
-    strcpy(file, "rect.svg");
-    //strcpy(file, "circle.svg");
-    //strcpy(file, "Big.svg");
-    //strcpy(file,"rect.svg");
-    SVGimage* img = createSVGimage(file);
 
-    // char* details = SVGimageToString(img);
-    // printf("\nDetails:\n%s\n", details);
-    // free(details);
-
-    // List* temp = getGroups(img);
-    // temp=temp;
-    // clearList(temp);
-    // freeList(temp);
-
-    // printf("Calculating the number of attributes...\n");
-    // printf("there are %d attributes\n", numAttr(img));
-
-    // printf("finding the rectangles\n");
-
-    // int test = numRectsWithArea(img, 716404.00);
-    // printf("Number of rectangles with area = %d\n", test);
-
-    //int test = numCirclesWithArea(img, 201.06);
-    //printf("Number of circles with area = %d\n", test);
-
-    // test = numPathsWithdata(img, "m28.8 34.3c0 4-3.2 7.2-7.2 7.2-4 0-7.2-3.2-7.2-7.2 0-4 3.2-7.2 7.2-7.2 4 0 7.2 3.2 7.2 7.2");
-    // printf("Number of paths = %d\n", test);
-
-    int test = numAttr(img);
-    printf("numAttr = %d\n", test);
-
-    // test = numGroupsWithLen(img, 3);
-    // printf("numGroups = %d\n", test);
-
-    deleteSVGimage(img);
-
-    printf("Done.\n");
-    
-    free(file);
-    return 0;
-}*/
