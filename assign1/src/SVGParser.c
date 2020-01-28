@@ -472,7 +472,7 @@ void deleteSVGimage(SVGimage* img) {
 }
 
 //Prints a list
-static void printList(List* type) {
+/*static void printList(List* type) {
     if (type == NULL)
         return;
     char* string = toString(type);
@@ -480,7 +480,7 @@ static void printList(List* type) {
     printf("string = %s\n", string);
 
     free(string);
-}
+}*/
 
 //Traverse through the list and add all nodes to the new list.
 static void addListElemToDiffList(List* new, List* old) {
@@ -494,7 +494,6 @@ static void addListElemToDiffList(List* new, List* old) {
         insertBack(new, node);
         
 		node = nextElement(&itr);
-        printList(copy);
 	}
 }
 
@@ -1090,21 +1089,21 @@ int comparePaths(const void *first, const void *second) {
 
     return strcmp(one->data, two->data);
 }
-
+/*
 int main() {
     char* file = malloc(30);
     //strcpy(file, "quad01.svg");
     //strcpy(file, "Emoji_poo.svg");
-    strcpy(file, "Emoji_smiling.svg");
-    //strcpy(file, "rect.svg");
+    //strcpy(file, "Emoji_smiling.svg");
+    strcpy(file, "rect.svg");
     //strcpy(file, "circle.svg");
     //strcpy(file, "Big.svg");
     //strcpy(file,"rect.svg");
     SVGimage* img = createSVGimage(file);
 
-    char* details = SVGimageToString(img);
-    printf("\nDetails:\n%s\n", details);
-    free(details);
+    // char* details = SVGimageToString(img);
+    // printf("\nDetails:\n%s\n", details);
+    // free(details);
 
     // List* temp = getGroups(img);
     // temp=temp;
@@ -1119,11 +1118,14 @@ int main() {
     // int test = numRectsWithArea(img, 716404.00);
     // printf("Number of rectangles with area = %d\n", test);
 
-    int test = numCirclesWithArea(img, 201.06);
-    printf("Number of circles with area = %d\n", test);
+    //int test = numCirclesWithArea(img, 201.06);
+    //printf("Number of circles with area = %d\n", test);
 
     // test = numPathsWithdata(img, "m28.8 34.3c0 4-3.2 7.2-7.2 7.2-4 0-7.2-3.2-7.2-7.2 0-4 3.2-7.2 7.2-7.2 4 0 7.2 3.2 7.2 7.2");
     // printf("Number of paths = %d\n", test);
+
+    int test = numAttr(img);
+    printf("numAttr = %d\n", test);
 
     // test = numGroupsWithLen(img, 3);
     // printf("numGroups = %d\n", test);
@@ -1134,4 +1136,4 @@ int main() {
     
     free(file);
     return 0;
-}
+}*/
