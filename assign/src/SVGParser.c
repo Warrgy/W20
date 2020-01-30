@@ -8,6 +8,7 @@
  * Date: Jan 28, 2020
  *
  * Portions of this code were based off LinkedListAPI.c
+ * Used http://knol2share.blogspot.com/2009/05/validate-xml-against-xsd-in-c.html as reference for validating xml files. (Was include in the assignment description)
  */
 
 #include <math.h>
@@ -1092,3 +1093,82 @@ int comparePaths(const void *first, const void *second) {
     return strcmp(one->data, two->data);
 }
 
+
+/** A2 Code **/
+
+//Will validate the xmlDoc tree, and check if it complies with schemaFile given.
+/**
+ * Function uses functionality from http://knol2share.blogspot.com/2009/05/validate-xml-against-xsd-in-c.html as highlighted in the assignment description.
+ */
+bool validateXMLDoc(xmlDoc* doc, char* schemaFile) {
+    xmlSchemaPtr schema = NULL;
+    xmlSchemaParserCtxtPtr ctxt;
+
+    xmlLineNumbersDefault(1);
+
+    ctxt = xmlSchemaNewParserCtxt(schemaFile);
+
+    xmlSchemaSetParserErrors(ctxt, (xmlSchemaValidityErrorFunc) fprintf, (xmlSchemaValidityWarningFunc) fprintf, stderr);
+    schema = xmlSchemaParse(ctxt);
+    xmlSchemaFreeParserCtxt(ctxt);
+
+    int ret = 0;
+    xmlSchemaValidCtxtPtr ctxt_;
+
+    ctxt_ = xmlSchemaNewValidCtxt(schema);
+    xmlSchemaSetValidErrors(ctxt_, (xmlSchemaValidityErrorFunc) fprintf, (xmlSchemaValidityWarningFunc) fprintf, stderr);
+    ret = xmlSchemaValidateDoc(ctxt_, doc);
+
+    xmlSchemaFreeValidCtxt(ctxt_);
+    xmlFreeDoc(doc);
+    
+
+    // free the resource
+    if(schema != NULL)
+        xmlSchemaFree(schema);
+
+    xmlSchemaCleanupTypes();
+    xmlCleanupParser();
+    xmlMemoryDump();
+
+    if (ret == 0)
+        return true;
+    return false;
+}
+
+SVGimage* createValidSVGimage(char* fileName, char* schemaFile) {
+    char* svg = checkFileName(fileName);
+    char* schema = checkFileName(schemaFile);
+    if (svg == NULL|| schema == NULL) {
+        return NULL;
+    }
+
+    xmlDoc* doc = getDocViaFile(svg);
+    if (doc == NULL)
+        return NULL;
+
+    bool response = validateXMLDoc(doc, schema);
+    if (response == false)
+        return NULL;
+
+    SVGimage* image = createSVGimage(svg);
+
+    return image;
+}
+
+bool writeSVGimage(SVGimage* image, char* fileName) {
+    return false;
+}
+
+bool validateSVGimage(SVGimage* image, char* schemaFile) {
+    return false;
+}
+
+int main() {
+    SVGimage* img = createValidSVGimage("rect.svg", "svg.xsd");
+    printf("img = %p\n", (void*) img);
+    deleteSVGimage(img);
+
+    printf("Done.\n");
+    return 0;
+}
