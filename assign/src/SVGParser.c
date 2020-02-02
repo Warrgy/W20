@@ -1170,7 +1170,6 @@ static unsigned char* floatToString(float value, char units[50]) {
     sprintf(val, "%f", value); 
 
     strcat(val, units);
-    printf("Val = %s\n",val);
     return (unsigned char*) val;
 }
 
@@ -1371,8 +1370,6 @@ static xmlDoc* svgToDoc(SVGimage* image) {
     xmlNode* title = xmlNewTextChild(root, NULL, (const unsigned char*)"title", (const unsigned char*)image->title);
     xmlNewTextChild(root, NULL, (const unsigned char*)"desc", (const unsigned char*)image->description);
     
-    // printf("title: [%p] next=%p, prev=%p,child=%p,parent=%p\n",title,title->next,title->prev,title->children,title->parent);
-
     //Add the rectangle list to the nodes link.
     xmlAddList(image->rectangles, 'r', title);
 
