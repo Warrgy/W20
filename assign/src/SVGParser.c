@@ -1174,11 +1174,13 @@ bool writeSVGimage(SVGimage* image, char* fileName) {
 }
 
 //Converts a float number into a string. Will need to be freed in the calling function.
-static unsigned char* floatToString(float value) {
-    char* val = malloc(sizeof(float) * 3);
+static unsigned char* floatToString(float value, char units[50]) {
+    char* val = malloc(sizeof(float) * 3 + 3);
 
     sprintf(val, "%f", value); 
 
+    strcat(val, units);
+    printf("Val = %s\n",val);
     return (unsigned char*) val;
 }
 
@@ -1227,49 +1229,75 @@ static xmlAttr* xmlAddOtherAttributes(xmlAttr* previous, List* attributes, xmlNo
 }
 
 //Will add the attributes for the given xmlNode from the corresponding shape.
-static xmlAttr* addxmlAttr(void* val, char type, xmlNode* node) {
-//TODO: add units to the string.
-    xmlAttr* attr = NULL;
+static void addxmlAttr(void* val, char type, xmlNode* node) {
+    //These are used to interchangingly for connecting the attributes together
+    xmlAttr* one= NULL;
+    xmlAttr* two = NULL;
 
     if (type == 'r') {
-        xmlAttr* one= NULL;
-        xmlAttr* two = NULL;
         Rectangle* r = (Rectangle*) val;
 
         //Set the x attribute
-        unsigned char *temp = floatToString(r->x);
-        attr = xmlNewProp(node, (unsigned char*)"x", temp);
-        free(temp);
+        unsigned char *x = floatToString(r->x, r->units);
+        two = xmlNewProp(node, (unsigned char *)"x", x);
+        free(x);
 
         //Set and link the y attribute
-        unsigned char *temp1 = floatToString(r->y);
-        one = xmlNewProp(node, (unsigned char*)"y", temp1);
-        free(temp1);
-        linkAttr(attr,one);
+        unsigned char *y = floatToString(r->y, r->units);
+        one = xmlNewProp(node, (unsigned char *)"y", y);
+        free(y);
+        linkAttr(two,one);
 
         //Set and link the height attribute
-        unsigned char *temp2 = floatToString(r->height);
-        two = xmlNewProp(node, (unsigned char*)"height", temp2);
-        free(temp2);
+        unsigned char *height = floatToString(r->height, r->units);
+        two = xmlNewProp(node, (unsigned char *)"height", height);
+        free(height);
         linkAttr(one, two);
 
         //Set and link the width attribute
-        unsigned char*temp3 = floatToString(r->width);
-        one = xmlNewProp(node, (unsigned char*)"width", temp3);
-        free(temp3);
+        unsigned char *width = floatToString(r->width, r->units);
+        one = xmlNewProp(node, (unsigned char *)"width", width);
+        free(width);
         linkAttr(two, one);
 
         //Link all the rest of the attributes.
         xmlAddOtherAttributes(one, r->otherAttributes, node);
+
+    } else if (type == 'c') {
+        Circle* c = (Circle *) val;
+
+        //Set the cx
+        unsigned char* cx = floatToString(c->cx, c->units);
+        one = xmlNewProp(node, (unsigned char *)"cx", cx);
+        free(cx);
+
+        //Set the cy
+        unsigned char* cy = floatToString(c->cy, c->units);
+        two = xmlNewProp(node, (unsigned char *)"cy", cy);
+        free(cy);
+        linkAttr(one, two);
+
+        //Set the r
+        unsigned char* r = floatToString(c->r, c->units);
+        one = xmlNewProp(node, (unsigned char *)"r", r);
+        free(r);
+        linkAttr(two,one);
+
+        xmlAddOtherAttributes(one, c->otherAttributes, node);
+    } else if (type == 'p') {
+        Path* p = (Path*) val;
+
+        //Set the data
+        one = xmlNewProp(node,(unsigned char*)"d", (unsigned char*)p->data);
+        
+        xmlAddOtherAttributes(one, p->otherAttributes, node);
     }
-    return attr;
 }
 
+//Add the entire lists content onto the link with the olderSibling
 static void xmlAddList(List* list, char type, xmlNode* olderSibling) {
     xmlNode* node = NULL;
-    xmlNode* oldestSibling = NULL;
     xmlNode* prev = olderSibling;
-    int i = 0;
 
     List* temp = list;
     ListIterator itr = createIterator(temp);
@@ -1282,41 +1310,45 @@ static void xmlAddList(List* list, char type, xmlNode* olderSibling) {
         if (type == 'r') {
             Rectangle* r = (Rectangle*) cur;
             xmlNodeSetName(node, (unsigned char*)"rect");
-            xmlAttr* attr = addxmlAttr(r, 'r', node);
+            addxmlAttr(r, type, node);
             // printf("attr: [%p] next=%p, prev=%p, child=%p, parent=%p, name=%s, value=%s\n", attr->next);
             // printf("attr->prev = %p\n", attr->prev);
             // printf("attr->name = %s\n", attr->name);
             // xmlNode* chi = attr->children;
             // printf("attr->children->content = %s\n", chi->content);
             printf("r->x = %f\t", r->x);
+        } else if (type == 'c') {
+            Circle* c = (Circle*) cur;
+            xmlNodeSetName(node,(unsigned char*)"circle");
+            addxmlAttr(c, type, node);
+        } else if (type == 'p') {
+            Path* p = (Path*) cur;
+            xmlNodeSetName(node,(unsigned char*)"path");
+            addxmlAttr(p, type, node);
         }
 
         xmlAddSibling(prev,node);
-        printf("node: [%p] next=%p, prev=%p, child=%p, parent=%p, name=%s\n", node, node->next,node->prev,node->children,node->parent,node->name);
-        if (i < 1)
-            oldestSibling = node;
-        i++;
+        // printf("node: [%p] next=%p, prev=%p, child=%p, parent=%p, name=%s\n", node, node->next,node->prev,node->children,node->parent,node->name);
         prev = node;
 		cur = nextElement(&itr);
 	}
-    // printf("node = %p\n", node);
-    // printf("node->name = %s\n", node->name);
-    printf("oldestSibling = [%p] next=%p, prev=%p, child=%p, parent=%p,name=%s\n", oldestSibling, oldestSibling->next,oldestSibling->prev,oldestSibling->children,oldestSibling->parent,oldestSibling->name);
-    //return oldestSibling;
 }
 
 static xmlDoc* svgToDoc(SVGimage* image) {
+    //Initialize xmlDoc and declare root pointer for the tree
     xmlDoc* doc = xmlNewDoc(NULL);
     xmlNode* root = NULL;
 
+    //Set root node(svg node) and add the namespace to it
     root = xmlNewNode(NULL, (const unsigned char*) "svg");
     xmlNs* ns = xmlNewNs(root, (const unsigned char*)(image->namespace), NULL);
     //Set the namespace
     xmlSetNs(root, ns);
 
+    //Add the svg attributes
     xmlAttr* svgAttrs = xmlAddOtherAttributes(NULL, image->otherAttributes, root);
 
-    //Make the "svg" node the root element.
+    //Make the "svg" node the root element in the xmlDoc.
     xmlDocSetRootElement(doc, root);
 
     //Add the title and description to the children of the root
@@ -1325,17 +1357,15 @@ static xmlDoc* svgToDoc(SVGimage* image) {
 
     // printf("title: [%p] next=%p, prev=%p,child=%p,parent=%p\n",title,title->next,title->prev,title->children,title->parent);
 
+    //Add the rectangle list to the nodes link.
+    xmlAddList(image->rectangles, 'r', title);
 
-    printf("doing the rectangles\n");
-    printf("desc = [%p], title = [%p]\n", desc, title);
-    //Add the rectangle list to the nodes.
-    xmlAddList(image->rectangles, 'r', desc);
+    //Add the circle list to the nodes link.
+    xmlAddList(image->circles, 'c', title);
+
+    //Add the path list to the nodes link.
+    xmlAddList(image->paths, 'p', title);
     
-    // printf("rectangles: [%p] next=%p, prev=%p, child=%p, parent=%p, name=%s,properties=%p\n", rectangles, rectangles->next,rectangles->prev,rectangles->children,rectangles->parent,rectangles->name,rectangles->properties);
-    // rectangles=rectangles->prev;
-    // printf("rectangles: [%p] next=%p, prev=%p, child=%p, parent=%p, name=%s,properties=%p\n", rectangles, rectangles->next,rectangles->prev,rectangles->children,rectangles->parent,rectangles->name,rectangles->properties);
-    // rectangles=rectangles->prev;
-    // printf("rectangles: [%p] next=%p, prev=%p, child=%p, parent=%p, name=%s,properties=%p\n", rectangles, rectangles->next,rectangles->prev,rectangles->children,rectangles->parent,rectangles->name,rectangles->properties);
 
 
     //Print tree via svg image to test
