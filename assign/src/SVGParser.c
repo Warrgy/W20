@@ -1196,15 +1196,16 @@ static void linkAttr(xmlAttr* first, xmlAttr* second) {
 /** previous: The previous attribute that you want to link this to.
  *  attributes: A list of each and every attribute
  *  parent: The parent of this attribute **/
-static xmlAttr* xmlAddOtherAttributes(xmlAttr* previous, List* attributes, xmlNode* parent) {
-    xmlAttr* oldestSibling = NULL;
+static void xmlAddOtherAttributes(xmlAttr* previous, List* attributes, xmlNode* parent) {
+    //Used for linking two xmlAttr's together
     xmlAttr* current = NULL;
     xmlAttr* prev = previous;
 
-    int i = 0;
-    List* temp = attributes;
+    //Pointer to attribute list, just to be safe
+    List* attrs = attributes;
 
-    ListIterator itr = createIterator(temp);
+    //Iterate through the attribute list
+    ListIterator itr = createIterator(attrs);
     void* cur = nextElement(&itr);
 
     while (cur != NULL)
@@ -1213,19 +1214,16 @@ static xmlAttr* xmlAddOtherAttributes(xmlAttr* previous, List* attributes, xmlNo
 
         //Create new attribute prop and link it to its siblings
         current = xmlNewProp(parent, (unsigned char*) a->name, (unsigned char*) a->value);
-                // printf("\nprev = %p, current = %p\n", prev, current);
-        if(i < 1)
-            oldestSibling = current;
 
+        //Link this attribute with its sibling
         linkAttr(prev, current);
-        // printf("current: [%p] next = %p, prev = %p, parent = %p, child = %p, name = %s, value = %s\n", current, current->next, current->prev, current->parent, current->children, current->name, current->children->content);
-        // if (prev != NULL)printf("prev: prev = %p, prev->next = %p\n", prev, prev->next);
+        
+        //Set prev to this node for linking its younger sibling
         prev = current;
 
+        //Go to the next element
         cur = nextElement(&itr);
-        i++;
 	}
-    return oldestSibling;
 }
 
 //Will add the attributes for the given xmlNode from the corresponding shape.
@@ -1234,6 +1232,7 @@ static void addxmlAttr(void* val, char type, xmlNode* node) {
     xmlAttr* one= NULL;
     xmlAttr* two = NULL;
 
+    //Setup the attribute list if the value is a rectangle
     if (type == 'r') {
         Rectangle* r = (Rectangle*) val;
 
@@ -1263,7 +1262,9 @@ static void addxmlAttr(void* val, char type, xmlNode* node) {
         //Link all the rest of the attributes.
         xmlAddOtherAttributes(one, r->otherAttributes, node);
 
-    } else if (type == 'c') {
+    } 
+    //Setup the attribute list if the value is a circle
+    else if (type == 'c') {
         Circle* c = (Circle *) val;
 
         //Set the cx
@@ -1284,13 +1285,21 @@ static void addxmlAttr(void* val, char type, xmlNode* node) {
         linkAttr(two,one);
 
         xmlAddOtherAttributes(one, c->otherAttributes, node);
-    } else if (type == 'p') {
+    } 
+    //Setup the attribute list if the value is a path
+    else if (type == 'p') {
         Path* p = (Path*) val;
 
         //Set the data
         one = xmlNewProp(node,(unsigned char*)"d", (unsigned char*)p->data);
         
         xmlAddOtherAttributes(one, p->otherAttributes, node);
+    } 
+    //Setup the attribute list if the value is a group
+    else if (type == 'g') {
+        Group* g = (Group*) val;
+
+        xmlAddOtherAttributes(NULL, g->otherAttributes, node);
     }
 }
 
@@ -1299,6 +1308,7 @@ static void xmlAddList(List* list, char type, xmlNode* olderSibling) {
     xmlNode* node = NULL;
     xmlNode* prev = olderSibling;
 
+    //Iterate through the list
     List* temp = list;
     ListIterator itr = createIterator(temp);
     void* cur = nextElement(&itr);
@@ -1306,30 +1316,44 @@ static void xmlAddList(List* list, char type, xmlNode* olderSibling) {
     while (cur != NULL)
 	{
         node = xmlNewNode(NULL, (unsigned char*)"");
-        //Group* g = (Group*) node;
+
+        //Add each rectangle to the link
         if (type == 'r') {
             Rectangle* r = (Rectangle*) cur;
             xmlNodeSetName(node, (unsigned char*)"rect");
             addxmlAttr(r, type, node);
-            // printf("attr: [%p] next=%p, prev=%p, child=%p, parent=%p, name=%s, value=%s\n", attr->next);
-            // printf("attr->prev = %p\n", attr->prev);
-            // printf("attr->name = %s\n", attr->name);
-            // xmlNode* chi = attr->children;
-            // printf("attr->children->content = %s\n", chi->content);
-            printf("r->x = %f\t", r->x);
-        } else if (type == 'c') {
+        } 
+        //Add each circle to the link
+        else if (type == 'c') {
             Circle* c = (Circle*) cur;
             xmlNodeSetName(node,(unsigned char*)"circle");
             addxmlAttr(c, type, node);
-        } else if (type == 'p') {
+        } 
+        //Add each path to the link
+        else if (type == 'p') {
             Path* p = (Path*) cur;
             xmlNodeSetName(node,(unsigned char*)"path");
             addxmlAttr(p, type, node);
         }
+        //Add each group to the link
+        else if (type == 'g') {
+            Group* g = (Group*) cur;
+            xmlNodeSetName(node, (unsigned char*)"g");
+            addxmlAttr(g, type, node);
+            
+            //Used to have a default child to attach links to.
+            xmlNode* child = xmlNewTextChild(node, NULL, (unsigned char*)"text", (unsigned char*)"");
 
+            xmlAddList(g->rectangles, 'r', child);
+            xmlAddList(g->circles,'c', child);
+            xmlAddList(g->paths, 'p', child);
+            xmlAddList(g->groups, 'g', child);
+        }
+        //Add this node onto its sibling.
         xmlAddSibling(prev,node);
-        // printf("node: [%p] next=%p, prev=%p, child=%p, parent=%p, name=%s\n", node, node->next,node->prev,node->children,node->parent,node->name);
+        //Set the next sibling pointer
         prev = node;
+        //Go to the next element in the list.
 		cur = nextElement(&itr);
 	}
 }
@@ -1346,15 +1370,15 @@ static xmlDoc* svgToDoc(SVGimage* image) {
     xmlSetNs(root, ns);
 
     //Add the svg attributes
-    xmlAttr* svgAttrs = xmlAddOtherAttributes(NULL, image->otherAttributes, root);
+    xmlAddOtherAttributes(NULL, image->otherAttributes, root);
 
     //Make the "svg" node the root element in the xmlDoc.
     xmlDocSetRootElement(doc, root);
 
     //Add the title and description to the children of the root
     xmlNode* title = xmlNewTextChild(root, NULL, (const unsigned char*)"title", (const unsigned char*)image->title);
-    xmlNode* desc = xmlNewTextChild(root, NULL, (const unsigned char*)"desc", (const unsigned char*)image->description);
-
+    xmlNewTextChild(root, NULL, (const unsigned char*)"desc", (const unsigned char*)image->description);
+    
     // printf("title: [%p] next=%p, prev=%p,child=%p,parent=%p\n",title,title->next,title->prev,title->children,title->parent);
 
     //Add the rectangle list to the nodes link.
@@ -1366,7 +1390,8 @@ static xmlDoc* svgToDoc(SVGimage* image) {
     //Add the path list to the nodes link.
     xmlAddList(image->paths, 'p', title);
     
-
+    //Add the group list to the nodes link.
+    xmlAddList(image->groups, 'g', title);
 
     //Print tree via svg image to test
     xmlNode* test = xmlDocGetRootElement(doc);
@@ -1381,6 +1406,7 @@ static xmlDoc* svgToDoc(SVGimage* image) {
     return doc;
 }
 
+//This function will make sure that the SVGimage struct is valid via the schemaFile that is provided.
 bool validateSVGimage(SVGimage* image, char* schemaFile) {
     if (image == NULL || schemaFile == NULL)
         return false;
