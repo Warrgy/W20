@@ -1163,16 +1163,6 @@ SVGimage* createValidSVGimage(char* fileName, char* schemaFile) {
     return image;
 }
 
-bool writeSVGimage(SVGimage* image, char* fileName) {
-    char* file = checkFileName(fileName);
-    if (image == NULL || file == NULL)
-        return false;
-
-    
-
-    return false;
-}
-
 //Converts a float number into a string. Will need to be freed in the calling function.
 static unsigned char* floatToString(float value, char units[50]) {
     char* val = malloc(sizeof(float) * 3 + 3);
@@ -1359,6 +1349,8 @@ static void xmlAddList(List* list, char type, xmlNode* olderSibling) {
 }
 
 static xmlDoc* svgToDoc(SVGimage* image) {
+    if (image == NULL)
+        return NULL;
     //Initialize xmlDoc and declare root pointer for the tree
     xmlDoc* doc = xmlNewDoc(NULL);
     xmlNode* root = NULL;
@@ -1412,10 +1404,34 @@ bool validateSVGimage(SVGimage* image, char* schemaFile) {
         return false;
 
     xmlDoc* doc = svgToDoc(image);
+    if (doc == NULL)
+        return false;
     
     bool answer = validateXMLDoc(doc, schemaFile);
     
     return answer;
+}
+
+//This will write an SVGimage struct to file with the name that was given in fileName.
+//Will return true on success and false on failure
+bool writeSVGimage(SVGimage* image, char* fileName) {
+    char* file = checkFileName(fileName);
+    if (image == NULL || file == NULL)
+        return false;
+
+    xmlDoc* doc = svgToDoc(image);
+    if (doc == NULL)
+        return false;
+
+    int success = xmlSaveFormatFileEnc(fileName, doc, "UTF-8", 1);
+    
+    xmlFreeDoc(doc);
+    xmlCleanupParser();
+
+    if (success < 0)
+        return false;
+
+    return true;
 }
 
 int main() {
@@ -1428,6 +1444,9 @@ int main() {
 
     bool ans = validateSVGimage(img, "svg.xsd");
     printf("ans = %d\n", ans);
+
+    bool write = writeSVGimage(img, "test.svg");
+    printf("write = %d\n", write);
 
     deleteSVGimage(img);
 
