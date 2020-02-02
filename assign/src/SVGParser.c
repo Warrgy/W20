@@ -283,7 +283,7 @@ static SVGimage* convertXMLtoSVG(xmlNode* a_node, SVGimage* image) {
     xmlNode *cur_node = NULL;
 
     for (cur_node = a_node; cur_node != NULL; cur_node = cur_node->next) {
-            //printf("Current Loop name: [%s]\n", cur_node->name);
+            printf("Current Loop name: [%s]\n", cur_node->name);
 
             //If cur_node->nsDef != NULL -> deal with namespace
             //Add and check the NAMESPACE to the SVGimage ----
@@ -363,11 +363,14 @@ static SVGimage* convertXMLtoSVG(xmlNode* a_node, SVGimage* image) {
         
         //If this node has children then go to them
         if (cur_node->children != NULL) {
+            printf("Going into recursion.\n");
             convertXMLtoSVG(cur_node->children,image);
+            printf("Out of recursion.\n");
         }   
         //if there is no node that is next in the link then break the loop.
         if (cur_node->next == NULL)
             break;
+        printf("Checking the next pointer.\n");
     }
     return image;
 }
@@ -1100,7 +1103,7 @@ int comparePaths(const void *first, const void *second) {
 /**
  * Function uses functionality from http://knol2share.blogspot.com/2009/05/validate-xml-against-xsd-in-c.html as highlighted in the assignment description.
  */
-bool validateXMLDoc(xmlDoc* doc, char* schemaFile) {
+static bool validateXMLDoc(xmlDoc* doc, char* schemaFile) {
     xmlSchemaPtr schema = NULL;
     xmlSchemaParserCtxtPtr ctxt;
 
@@ -1136,6 +1139,7 @@ bool validateXMLDoc(xmlDoc* doc, char* schemaFile) {
     return false;
 }
 
+//Function will first check file names, then create an xmlDoc from that xml file. Validates it. Then creates an SVGimage from the xmlDoc tree struct.
 SVGimage* createValidSVGimage(char* fileName, char* schemaFile) {
     char* svg = checkFileName(fileName);
     char* schema = checkFileName(schemaFile);
@@ -1143,30 +1147,232 @@ SVGimage* createValidSVGimage(char* fileName, char* schemaFile) {
         return NULL;
     }
 
+    //Get xmlDoc from file.
     xmlDoc* doc = getDocViaFile(svg);
     if (doc == NULL)
         return NULL;
 
+    //Check if the xmlDoc is a valid xml file via the schema.
     bool response = validateXMLDoc(doc, schema);
     if (response == false)
         return NULL;
 
+    //Create the SVGimage since the svg file is a valid svg file.
     SVGimage* image = createSVGimage(svg);
 
     return image;
 }
 
 bool writeSVGimage(SVGimage* image, char* fileName) {
+    char* file = checkFileName(fileName);
+    if (image == NULL || file == NULL)
+        return false;
+
+    
+
     return false;
 }
 
+//Converts a float number into a string. Will need to be freed in the calling function.
+static unsigned char* floatToString(float value) {
+    char* val = malloc(sizeof(float) * 3);
+
+    sprintf(val, "%f", value); 
+
+    return (unsigned char*) val;
+}
+
+//Will link two xmlAttr structs together by pointing them to eachother.
+static void linkAttr(xmlAttr* first, xmlAttr* second) {
+    if (first != NULL && second != NULL) {
+        first->next = second;
+        second->prev = first;
+    } 
+}
+
+//This will create xmlAttr structs for each attribute in the attribute list. It will also connect them to the previous xmlAttr and its parent.
+/** previous: The previous attribute that you want to link this to.
+ *  attributes: A list of each and every attribute
+ *  parent: The parent of this attribute **/
+static xmlAttr* xmlAddOtherAttributes(xmlAttr* previous, List* attributes, xmlNode* parent) {
+    xmlAttr* oldestSibling = NULL;
+    xmlAttr* current = NULL;
+    xmlAttr* prev = previous;
+
+    int i = 0;
+    List* temp = attributes;
+
+    ListIterator itr = createIterator(temp);
+    void* cur = nextElement(&itr);
+
+    while (cur != NULL)
+	{
+        Attribute* a = (Attribute*) cur;
+
+        //Create new attribute prop and link it to its siblings
+        current = xmlNewProp(parent, (unsigned char*) a->name, (unsigned char*) a->value);
+                // printf("\nprev = %p, current = %p\n", prev, current);
+        if(i < 1)
+            oldestSibling = current;
+
+        linkAttr(prev, current);
+        // printf("current: [%p] next = %p, prev = %p, parent = %p, child = %p, name = %s, value = %s\n", current, current->next, current->prev, current->parent, current->children, current->name, current->children->content);
+        // if (prev != NULL)printf("prev: prev = %p, prev->next = %p\n", prev, prev->next);
+        prev = current;
+
+        cur = nextElement(&itr);
+        i++;
+	}
+    return oldestSibling;
+}
+
+//Will add the attributes for the given xmlNode from the corresponding shape.
+static xmlAttr* addxmlAttr(void* val, char type, xmlNode* node) {
+//TODO: add units to the string.
+    xmlAttr* attr = NULL;
+
+    if (type == 'r') {
+        xmlAttr* one= NULL;
+        xmlAttr* two = NULL;
+        Rectangle* r = (Rectangle*) val;
+
+        //Set the x attribute
+        unsigned char *temp = floatToString(r->x);
+        attr = xmlNewProp(node, (unsigned char*)"x", temp);
+        free(temp);
+
+        //Set and link the y attribute
+        unsigned char *temp1 = floatToString(r->y);
+        one = xmlNewProp(node, (unsigned char*)"y", temp1);
+        free(temp1);
+        linkAttr(attr,one);
+
+        //Set and link the height attribute
+        unsigned char *temp2 = floatToString(r->height);
+        two = xmlNewProp(node, (unsigned char*)"height", temp2);
+        free(temp2);
+        linkAttr(one, two);
+
+        //Set and link the width attribute
+        unsigned char*temp3 = floatToString(r->width);
+        one = xmlNewProp(node, (unsigned char*)"width", temp3);
+        free(temp3);
+        linkAttr(two, one);
+
+        //Link all the rest of the attributes.
+        xmlAddOtherAttributes(one, r->otherAttributes, node);
+    }
+    return attr;
+}
+
+static void xmlAddList(List* list, char type, xmlNode* olderSibling) {
+    xmlNode* node = NULL;
+    xmlNode* oldestSibling = NULL;
+    xmlNode* prev = olderSibling;
+    int i = 0;
+
+    List* temp = list;
+    ListIterator itr = createIterator(temp);
+    void* cur = nextElement(&itr);
+
+    while (cur != NULL)
+	{
+        node = xmlNewNode(NULL, (unsigned char*)"");
+        //Group* g = (Group*) node;
+        if (type == 'r') {
+            Rectangle* r = (Rectangle*) cur;
+            xmlNodeSetName(node, (unsigned char*)"rect");
+            xmlAttr* attr = addxmlAttr(r, 'r', node);
+            // printf("attr: [%p] next=%p, prev=%p, child=%p, parent=%p, name=%s, value=%s\n", attr->next);
+            // printf("attr->prev = %p\n", attr->prev);
+            // printf("attr->name = %s\n", attr->name);
+            // xmlNode* chi = attr->children;
+            // printf("attr->children->content = %s\n", chi->content);
+            printf("r->x = %f\t", r->x);
+        }
+
+        xmlAddSibling(prev,node);
+        printf("node: [%p] next=%p, prev=%p, child=%p, parent=%p, name=%s\n", node, node->next,node->prev,node->children,node->parent,node->name);
+        if (i < 1)
+            oldestSibling = node;
+        i++;
+        prev = node;
+		cur = nextElement(&itr);
+	}
+    // printf("node = %p\n", node);
+    // printf("node->name = %s\n", node->name);
+    printf("oldestSibling = [%p] next=%p, prev=%p, child=%p, parent=%p,name=%s\n", oldestSibling, oldestSibling->next,oldestSibling->prev,oldestSibling->children,oldestSibling->parent,oldestSibling->name);
+    //return oldestSibling;
+}
+
+static xmlDoc* svgToDoc(SVGimage* image) {
+    xmlDoc* doc = xmlNewDoc(NULL);
+    xmlNode* root = NULL;
+
+    root = xmlNewNode(NULL, (const unsigned char*) "svg");
+    xmlNs* ns = xmlNewNs(root, (const unsigned char*)(image->namespace), NULL);
+    //Set the namespace
+    xmlSetNs(root, ns);
+
+    xmlAttr* svgAttrs = xmlAddOtherAttributes(NULL, image->otherAttributes, root);
+
+    //Make the "svg" node the root element.
+    xmlDocSetRootElement(doc, root);
+
+    //Add the title and description to the children of the root
+    xmlNode* title = xmlNewTextChild(root, NULL, (const unsigned char*)"title", (const unsigned char*)image->title);
+    xmlNode* desc = xmlNewTextChild(root, NULL, (const unsigned char*)"desc", (const unsigned char*)image->description);
+
+    // printf("title: [%p] next=%p, prev=%p,child=%p,parent=%p\n",title,title->next,title->prev,title->children,title->parent);
+
+
+    printf("doing the rectangles\n");
+    printf("desc = [%p], title = [%p]\n", desc, title);
+    //Add the rectangle list to the nodes.
+    xmlAddList(image->rectangles, 'r', desc);
+    
+    // printf("rectangles: [%p] next=%p, prev=%p, child=%p, parent=%p, name=%s,properties=%p\n", rectangles, rectangles->next,rectangles->prev,rectangles->children,rectangles->parent,rectangles->name,rectangles->properties);
+    // rectangles=rectangles->prev;
+    // printf("rectangles: [%p] next=%p, prev=%p, child=%p, parent=%p, name=%s,properties=%p\n", rectangles, rectangles->next,rectangles->prev,rectangles->children,rectangles->parent,rectangles->name,rectangles->properties);
+    // rectangles=rectangles->prev;
+    // printf("rectangles: [%p] next=%p, prev=%p, child=%p, parent=%p, name=%s,properties=%p\n", rectangles, rectangles->next,rectangles->prev,rectangles->children,rectangles->parent,rectangles->name,rectangles->properties);
+
+
+    //Print tree via svg image to test
+    xmlNode* test = xmlDocGetRootElement(doc);
+    SVGimage* test1 = initializeSVG(test);
+    char *string = SVGimageToString(test1);
+    printf("\n********Contents*********\n%s\n", string);
+    free(string);
+
+    deleteSVGimage(test1);
+    
+
+    return doc;
+}
+
 bool validateSVGimage(SVGimage* image, char* schemaFile) {
-    return false;
+    if (image == NULL || schemaFile == NULL)
+        return false;
+
+    xmlDoc* doc = svgToDoc(image);
+    
+    bool answer = validateXMLDoc(doc, schemaFile);
+    
+    return answer;
 }
 
 int main() {
     SVGimage* img = createValidSVGimage("rect.svg", "svg.xsd");
+    char* test = SVGimageToString(img);
+    printf("THE CORRECT SVGimage:\n%s\n", test);
+    free(test);
+
     printf("img = %p\n", (void*) img);
+
+    bool ans = validateSVGimage(img, "svg.xsd");
+    printf("ans = %d\n", ans);
+
     deleteSVGimage(img);
 
     printf("Done.\n");
