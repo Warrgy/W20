@@ -1308,21 +1308,18 @@ static void xmlAddList(List* list, char type, xmlNode* olderSibling) {
 
         //Add each rectangle to the link
         if (type == 'r') {
-            Rectangle* r = (Rectangle*) cur;
             xmlNodeSetName(node, (unsigned char*)"rect");
-            addxmlAttr(r, type, node);
+            addxmlAttr(cur, type, node);
         } 
         //Add each circle to the link
         else if (type == 'c') {
-            Circle* c = (Circle*) cur;
             xmlNodeSetName(node,(unsigned char*)"circle");
-            addxmlAttr(c, type, node);
+            addxmlAttr(cur, type, node);
         } 
         //Add each path to the link
         else if (type == 'p') {
-            Path* p = (Path*) cur;
             xmlNodeSetName(node,(unsigned char*)"path");
-            addxmlAttr(p, type, node);
+            addxmlAttr(cur, type, node);
         }
         //Add each group to the link
         else if (type == 'g') {
@@ -1330,13 +1327,25 @@ static void xmlAddList(List* list, char type, xmlNode* olderSibling) {
             xmlNodeSetName(node, (unsigned char*)"g");
             addxmlAttr(g, type, node);
             
-            //Used to have a default child to attach links to.
-            xmlNode* child = xmlNewTextChild(node, NULL, (unsigned char*)"text", (unsigned char*)"");
+            //Used to have a default child to attach links to.(since groups has no default attribute to attach other attributes to)
+            //This will get removed later, just used as a start of the link.
+            xmlNode* child = xmlNewChild(node, NULL, (unsigned char*)"text", (unsigned char*)"");
 
             xmlAddList(g->rectangles, 'r', child);
             xmlAddList(g->circles,'c', child);
             xmlAddList(g->paths, 'p', child);
             xmlAddList(g->groups, 'g', child);
+            
+            //Free the node that was used as a start of the link for each groups children
+            //Get the node from the lists if there was lists added.
+            xmlNode* removeText = xmlNextElementSibling(child);
+            //Change the pointers to not have anything to do with the child node anymore.
+            if (removeText != NULL) {
+                node->children = removeText;
+                removeText->parent = node;
+                removeText->prev = NULL;
+            }
+            xmlFreeNode(child);
         }
         //Add this node onto its sibling.
         xmlAddSibling(prev,node);
