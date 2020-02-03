@@ -1,5 +1,5 @@
 /*
- * Assignment 1
+ * SVG Assignment
  * CIS2750 
  *
  * Name: Cameron Fisher
@@ -283,7 +283,7 @@ static SVGimage* convertXMLtoSVG(xmlNode* a_node, SVGimage* image) {
     xmlNode *cur_node = NULL;
 
     for (cur_node = a_node; cur_node != NULL; cur_node = cur_node->next) {
-            printf("Current Loop name: [%s]\n", cur_node->name);
+            //printf("Current Loop name: [%s]\n", cur_node->name);
 
             //If cur_node->nsDef != NULL -> deal with namespace
             //Add and check the NAMESPACE to the SVGimage ----
@@ -363,14 +363,11 @@ static SVGimage* convertXMLtoSVG(xmlNode* a_node, SVGimage* image) {
         
         //If this node has children then go to them
         if (cur_node->children != NULL) {
-            printf("Going into recursion.\n");
             convertXMLtoSVG(cur_node->children,image);
-            printf("Out of recursion.\n");
         }   
         //if there is no node that is next in the link then break the loop.
         if (cur_node->next == NULL)
             break;
-        printf("Checking the next pointer.\n");
     }
     return image;
 }
@@ -1356,6 +1353,7 @@ static void xmlAddList(List* list, char type, xmlNode* olderSibling) {
 	}
 }
 
+//This function will create a xmlDoc based off of the SVGimage struct.
 static xmlDoc* svgToDoc(SVGimage* image) {
     if (image == NULL)
         return NULL;
@@ -1429,7 +1427,7 @@ bool writeSVGimage(SVGimage* image, char* fileName) {
     if (doc == NULL)
         return false;
 
-    int success = xmlSaveFormatFileEnc(fileName, doc, "UTF-8", 1);
+    int success = xmlSaveFormatFileEnc(fileName, doc, NULL, 1);
     
     xmlFreeDoc(doc);
     xmlCleanupParser();
