@@ -1290,7 +1290,7 @@ static void addxmlAttr(void* val, char type, xmlNode* node) {
 }
 
 //Add the entire lists content onto the link with the olderSibling
-static void xmlAddList(List* list, char type, xmlNode* olderSibling) {
+static void xmlAddList(List* list, char type, xmlNode* olderSibling, xmlNs* ns) {
     xmlNode* node = NULL;
     xmlNode* prev = olderSibling;
 
@@ -1301,37 +1301,36 @@ static void xmlAddList(List* list, char type, xmlNode* olderSibling) {
 
     while (cur != NULL)
 	{
+        //Create a node and set the namespace for it.
         node = xmlNewNode(NULL, (unsigned char*)"");
+        xmlSetNs(node,ns);
+        addxmlAttr(cur, type, node);
 
         //Add each rectangle to the link
         if (type == 'r') {
             xmlNodeSetName(node, (unsigned char*)"rect");
-            addxmlAttr(cur, type, node);
         } 
         //Add each circle to the link
         else if (type == 'c') {
             xmlNodeSetName(node,(unsigned char*)"circle");
-            addxmlAttr(cur, type, node);
         } 
         //Add each path to the link
         else if (type == 'p') {
             xmlNodeSetName(node,(unsigned char*)"path");
-            addxmlAttr(cur, type, node);
         }
         //Add each group to the link
         else if (type == 'g') {
             Group* g = (Group*) cur;
             xmlNodeSetName(node, (unsigned char*)"g");
-            addxmlAttr(g, type, node);
             
             //Used to have a default child to attach links to.(since groups has no default attribute to attach other attributes to)
             //This will get removed later, just used as a start of the link.
             xmlNode* child = xmlNewChild(node, NULL, (unsigned char*)"text", (unsigned char*)"");
 
-            xmlAddList(g->rectangles, 'r', child);
-            xmlAddList(g->circles,'c', child);
-            xmlAddList(g->paths, 'p', child);
-            xmlAddList(g->groups, 'g', child);
+            xmlAddList(g->rectangles, 'r', child, ns);
+            xmlAddList(g->circles,'c', child, ns);
+            xmlAddList(g->paths, 'p', child, ns);
+            xmlAddList(g->groups, 'g', child, ns);
             
             //Free the node that was used as a start of the link for each groups children
             //Get the node from the lists if there was lists added.
@@ -1357,14 +1356,16 @@ static void xmlAddList(List* list, char type, xmlNode* olderSibling) {
 static xmlDoc* svgToDoc(SVGimage* image) {
     if (image == NULL)
         return NULL;
+
     //Initialize xmlDoc and declare root pointer for the tree
     xmlDoc* doc = xmlNewDoc(NULL);
     xmlNode* root = NULL;
 
-    //Set root node(svg node) and add the namespace to it
+    //Set root node(svg node) and create the namespace node
     root = xmlNewNode(NULL, (const unsigned char*) "svg");
     xmlNs* ns = xmlNewNs(root, (const unsigned char*)(image->namespace), NULL);
-    //Set the namespace
+    
+    //Set the namespace of the root node
     xmlSetNs(root, ns);
 
     //Add the svg attributes
@@ -1372,32 +1373,40 @@ static xmlDoc* svgToDoc(SVGimage* image) {
 
     //Make the "svg" node the root element in the xmlDoc.
     xmlDocSetRootElement(doc, root);
+    
+    //Used to have a default child to attach links to. Since there may not be a title or description.
+    //This will get removed later, just used as a start of the link.
+    xmlNode* child = xmlNewChild(root, NULL, (unsigned char*)"text", (unsigned char*)"");
 
     //Add the title and description to the children of the root
-    xmlNode* title = xmlNewTextChild(root, NULL, (const unsigned char*)"title", (const unsigned char*)image->title);
-    xmlNewTextChild(root, NULL, (const unsigned char*)"desc", (const unsigned char*)image->description);
+    if (strlen(image->title) > 0) 
+        xmlNewTextChild(root, NULL, (const unsigned char*)"title", (unsigned char*)image->title);
+    
+    if (strlen(image->description) > 0)
+        xmlNewTextChild(root, NULL, (const unsigned char*)"desc", (unsigned char*)image->description);
     
     //Add the rectangle list to the nodes link.
-    xmlAddList(image->rectangles, 'r', title);
+    xmlAddList(image->rectangles, 'r', child, ns);
 
     //Add the circle list to the nodes link.
-    xmlAddList(image->circles, 'c', title);
+    xmlAddList(image->circles, 'c', child, ns);
 
     //Add the path list to the nodes link.
-    xmlAddList(image->paths, 'p', title);
+    xmlAddList(image->paths, 'p', child, ns);
     
     //Add the group list to the nodes link.
-    xmlAddList(image->groups, 'g', title);
+    xmlAddList(image->groups, 'g', child, ns);
 
-    //Print tree via svg image to test
-    xmlNode* test = xmlDocGetRootElement(doc);
-    SVGimage* test1 = initializeSVG(test);
-    char *string = SVGimageToString(test1);
-    printf("\n********Contents*********\n%s\n", string);
-    free(string);
-
-    deleteSVGimage(test1);
-    
+    //Free the node that was used as a start of the link for each groups children
+    //Get the node from the lists if there was lists added.
+    xmlNode* removeText = xmlNextElementSibling(child);
+    //Change the pointers to not have anything to do with the child node anymore.
+    if (removeText != NULL) {
+        root->children = removeText;
+        removeText->parent = root;
+        removeText->prev = NULL;
+    }
+    xmlFreeNode(child);
 
     return doc;
 }
@@ -1427,7 +1436,7 @@ bool writeSVGimage(SVGimage* image, char* fileName) {
     if (doc == NULL)
         return false;
 
-    int success = xmlSaveFormatFileEnc(fileName, doc, NULL, 1);
+    int success = xmlSaveFormatFileEnc(fileName, doc, "UTF-8", 1);
     
     xmlFreeDoc(doc);
     xmlCleanupParser();
@@ -1440,11 +1449,6 @@ bool writeSVGimage(SVGimage* image, char* fileName) {
 
 int main() {
     SVGimage* img = createValidSVGimage("rect.svg", "svg.xsd");
-    char* test = SVGimageToString(img);
-    printf("THE CORRECT SVGimage:\n%s\n", test);
-    free(test);
-
-    printf("img = %p\n", (void*) img);
 
     bool ans = validateSVGimage(img, "svg.xsd");
     printf("ans = %d\n", ans);
