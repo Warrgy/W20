@@ -20,7 +20,7 @@ parser: SVGParser
 SVGParser: $(BIN)SVGParser.o libsvgparse.so $(SRC)SVGParser.c
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $(BIN)SVGParser $(BIN)*.o #-llist
 	
-$(BIN)SVGParser.o: $(SRC)SVGParser.c
+$(BIN)SVGParser.o: $(BIN)LinkedListAPI.o $(SRC)SVGParser.c
 	$(CC) $(CFLAGS) -I$(INC) -I$(INC_PATH) -c -fpic $(SRC)SVGParser.c -o $@
 	
 libsvgparse.so: $(BIN)LinkedListAPI.o
@@ -30,13 +30,13 @@ $(BIN)LinkedListAPI.o: $(SRC)LinkedListAPI.c $(INC)LinkedListAPI.h
 	$(CC) $(CFLAGS) -c -fpic -I$(INC) $(SRC)LinkedListAPI.c -o $@
 
 $(SRC)SVGParser.c:  $(INC)SVGParser.h
-	$(CC) $(CFLAGS)  $(SRC)SVGParser.c  -o $(BIN)SVGParser
+	$(CC) $(CFLAGS) -I$(INC_PATH) -I$(INC) $(BIN)LinkedListAPI.o -c $(SRC)SVGParser.c  -o $(BIN)SVGParser
 
 run: 
 	./bin/SVGParser
 
 valgrind: 
-	valgrind --leak-check=full --leak-resolution=med --track-origins=yes ./bin/SVGParser
+	valgrind --leak-check=full --leak-resolution=med --track-origins=yes --show-leak-kinds=all ./bin/SVGParser
 
 gdb:
 	gdb ./bin/SVGParser

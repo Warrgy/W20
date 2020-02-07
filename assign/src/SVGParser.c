@@ -632,7 +632,7 @@ static int numGWithArea(List* list, int area, char* pathData, char type, const c
             Group* g = (Group*) data;
             count += numGWithArea(g->rectangles, area, NULL, 'r', wanted);
             count += numGWithArea(g->circles, area, NULL, 'c', wanted);
-            count += numGWithArea(g->paths, -1, NULL, 'p', wanted);
+            count += numGWithArea(g->paths, -1, pathData, 'p', wanted);
             count += numGWithArea(g->groups, area, pathData, 'g', wanted);
         }
         
@@ -1447,8 +1447,157 @@ bool writeSVGimage(SVGimage* image, char* fileName) {
     return true;
 }
 
+//Will change the 'toBeChanged' into the value in attr, and delete it.
+//Works for changing float and strings, all dependent on what 'num'.
+//NULL -> string 'toBeChanged'
+//!NULL -> float 'num'
+void changeValue(char* toBeChanged, Attribute* attr, float* num) {
+    if (num == NULL) {
+        strcpy(toBeChanged,attr->value);
+    } else {
+        *num = stringToFloat(attr->value, NULL);
+        printf("*num = %f\n",*num);
+    }
+    deleteAttribute(attr);
+}
+
+//Will go through a list of attributes and either change an existing one, or add a new one
+//@var list <- MUST BE A LIST OF ATTRIBUTES
+void changeAttr(List* list, Attribute* attr) {
+    ListIterator itr = createIterator(list);
+    void* node = nextElement(&itr);
+
+    while (node != NULL)
+	{
+        Attribute* cur = (Attribute*) node;
+        if (strcmp(cur->name,attr->name) == 0) {
+            changeValue(cur->value,attr, NULL);
+            return;
+        }
+        node = nextElement(&itr);
+	}
+    insertBack(list,attr);
+}
+
+void changeAttrInList(List* list, int elemIndex, Attribute* newAttribute, char type) {
+    ListIterator itr = createIterator(list);
+    void* node = nextElement(&itr);
+
+    for (int i = 0; node != NULL; i++) {
+        if (i == elemIndex) {
+            if (type == 'r') {
+                Rectangle* r = (Rectangle*) node;
+                if (strcmp(newAttribute->name, "x") == 0) {
+                    changeValue(NULL, newAttribute, &(r->x));
+                } else if (strcmp(newAttribute->name, "y") == 0) {
+                    changeValue(NULL, newAttribute, &(r->y));
+                } else if (strcmp(newAttribute->name, "width") == 0) {
+                    changeValue(NULL, newAttribute, &(r->width));
+                } else if (strcmp(newAttribute->name, "height") == 0) {
+                    changeValue(NULL, newAttribute, &(r->height));
+                } else {
+                    //Other attributes
+                    changeAttr(r->otherAttributes, newAttribute);
+                }
+            } else if (type == 'c') {
+                Circle* c = (Circle*) node;
+                if (strcmp(newAttribute->name, "cx") == 0) {
+                    changeValue(NULL, newAttribute, &(c->cx));
+                } else if (strcmp(newAttribute->name, "cy") == 0) {
+                    changeValue(NULL, newAttribute, &(c->cy));
+                } else if (strcmp(newAttribute->name, "r") == 0) {
+                    changeValue(NULL, newAttribute, &(c->r));
+                } else {
+                    //Other attributes
+                    changeAttr(c->otherAttributes, newAttribute);
+                }
+
+            } else if (type == 'p') {
+                Path* p = (Path*) node;
+                if (strcmp(newAttribute->name, "d") == 0 || strcmp(newAttribute->name, "data") == 0) {
+                    changeValue(p->data, newAttribute, NULL);
+                } else {
+                    //Other attributes
+                    changeAttr(p->otherAttributes, newAttribute);
+                }
+            } else if (type == 'g') {
+                Group* g = (Group*) node;
+                changeAttr(g->otherAttributes, newAttribute);
+            }
+        }
+        node = nextElement(&itr);
+	}
+}
+
+void setAttribute(SVGimage* image, elementType elemType, int elemIndex, Attribute* newAttribute) {
+    if (image == NULL || newAttribute == NULL || elemType > 4 || elemType < 0 || elemIndex < 0)
+        return; 
+    if (elemType == SVG_IMAGE) {
+        if (strcmp(newAttribute->name, "title") == 0) {
+            changeValue(image->title, newAttribute, NULL);
+        } else if (strcmp(newAttribute->name, "description") == 0 || strcmp(newAttribute->name, "desc") == 0) {
+            changeValue(image->description, newAttribute, NULL);
+        } else {
+            //Other attributes
+            changeAttr(image->otherAttributes, newAttribute);
+        }
+    } else if (elemType == CIRC) {
+        changeAttrInList(image->circles, elemIndex, newAttribute, 'c');        
+    } else if (elemType == RECT) {
+        changeAttrInList(image->rectangles, elemIndex, newAttribute, 'r');  
+    } else if (elemType == PATH) {
+        changeAttrInList(image->paths, elemIndex, newAttribute, 'p');
+    } else if (elemType == GROUP) {
+        changeAttrInList(image->groups, elemIndex, newAttribute, 'g');
+    }
+}
+
+void addComponent(SVGimage* image, elementType type, void* newElement) {
+    if (image == NULL || type < 1 || type > 3 || newElement == NULL) 
+        return;
+    
+    if (type == RECT) {
+        Rectangle* r = (Rectangle*) newElement;
+        insertBack(image->rectangles, r);
+    } else if (type == CIRC) {
+        Circle* c = (Circle*) newElement;
+        insertBack(image->circles, c);
+    } else if (type == PATH) {
+        Path* p = (Path*) newElement;
+        insertBack(image->paths, p);
+    }
+}
+
 int main() {
     SVGimage* img = createValidSVGimage("rect.svg", "svg.xsd");
+
+    char* before = SVGimageToString(img);
+    printf("BEFORE:\n%s\n", before);
+    free(before);
+
+
+    Attribute* curAttr = malloc(sizeof(Attribute));
+
+    curAttr->name = malloc (100);
+    curAttr->value = malloc (100);
+    strcpy(curAttr->name, (char*)"opacity");
+    strcpy(curAttr->value, (char*)"0.4");
+
+    Rectangle* rect = malloc(sizeof(Rectangle));
+    rect->x = 69.0;
+    rect->y = 69.0;
+    rect->height = 49.0;
+    rect->width = 49.0;
+    strcpy(rect->units, "");
+    rect->otherAttributes = initializeList(&attributeToString, &deleteAttribute, &compareAttributes);
+
+    addComponent(img, RECT, rect);
+    setAttribute(img, RECT, 1, curAttr);
+
+    char* after = SVGimageToString(img);
+    printf("AFTER:\n%s\n", after);
+    free(after);
+
 
     bool ans = validateSVGimage(img, "svg.xsd");
     printf("ans = %d\n", ans);

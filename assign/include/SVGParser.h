@@ -9,6 +9,10 @@
 #include <libxml/xmlschemastypes.h>
 #include "LinkedListAPI.h"
 
+typedef enum COMP{
+    SVG_IMAGE, CIRC, RECT, PATH, GROUP
+} elementType;
+
 //Represents a generic SVG element/XML node Attribute
 typedef struct  {
     //Attribute name.  Must not be NULL
@@ -245,6 +249,53 @@ SVGimage* createValidSVGimage(char* fileName, char* schemaFile);
  	fileName - the name of the output file
  **/
 bool writeSVGimage(SVGimage* image, char* fileName);
+
+/** Function to setting an attribute in an SVGimage or component
+ *@pre
+    SVGimage object exists, is valid, and and is not NULL.
+    newAttribute is not NULL
+ *@post The appropriate attribute was set corectly
+ *@return N/A
+ *@param
+    image - a pointer to an SVGimage struct
+    elemType - enum value indicating elemtn to modify
+    elemIndex - index of thje lement to modify
+    newAttribute - struct containing name and value of the updated attribute
+ **/
+void setAttribute(SVGimage* image, elementType elemType, int elemIndex, Attribute* newAttribute);
+
+/** Function to adding an element - Circle, Rectngle, or Path - to an SVGimage
+ *@pre
+    SVGimage object exists, is valid, and and is not NULL.
+    newElement is not NULL
+ *@post The appropriate element was added correctly
+ *@return N/A
+ *@param
+    image - a pointer to an SVGimage struct
+    elemType - enum value indicating elemtn to modify
+    newElement - pointer to the element sgtruct (Circle, Rectngle, or Path)
+ **/
+void addComponent(SVGimage* image, elementType type, void* newElement);
+
+char* attrToJSON(const Attribute *a);
+char* circleToJSON(const Circle *c);
+char* rectToJSON(const Rectangle *r);
+char* pathToJSON(const Path *p);
+char* groupToJSON(const Group *g);
+
+char* attrListToJSON(const List *list);
+char* circListToJSON(const List *list);
+char* rectListToJSON(const List *list);
+char* pathListToJSON(const List *list);
+char* groupListToJSON(const List *list);
+
+char* SVGtoJSON(const SVGimage* imge);
+
+/* ******************************* Bonus A2 functions - optional for A2 *************************** */
+
+SVGimage* JSONtoGPX(const char* svgString);
+Rectangle* JSONtoRect(const char* svgString);
+Circle* JSONtoCircle(const char* svgString);
 
 /* ******************************* List helper functions  - MUST be implemented *************************** */
 
