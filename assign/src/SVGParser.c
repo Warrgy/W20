@@ -1744,15 +1744,33 @@ char* groupListToJSON(const List *list) {
     return string;
 }
 
+
+
 //Get the JSON string for an entire SVGimage;
 char* SVGtoJSON(const SVGimage* imge) {
-    if (list == NULL)
+    if (imge == NULL)
         return "{}";
 
-    char* string = malloc();
+    List* rects = getRects((SVGimage*)imge);
+    int rNum = getImmediateChildCount(rects);
+    free(rects);
+    
+    List* circles = getCircles((SVGimage*)imge);
+    int cNum = getImmediateChildCount(circles);
+    free(circles);
+
+    List* paths = getPaths((SVGimage*)imge);
+    int pNum = getImmediateChildCount(paths);
+    free(paths);
+
+    List* groups = getGroups((SVGimage*)imge);
+    int gNum = getImmediateChildCount(groups);
+    free(groups);
+
+    char* string = malloc(48 + (sizeof(int) * 4) + 1);
 
     //setup helper to get the number of nodes in the list(might have already made one) and then call the getters.
-    sprintf(string, "{\"numRect\":%d,\"numCirc\":%d,\"numPaths\":%d,\"numGroups\":%d}", );
+    sprintf(string, "{\"numRect\":%d,\"numCirc\":%d,\"numPaths\":%d,\"numGroups\":%d}", rNum, cNum, pNum, gNum);
 
     return string;
 }
@@ -1765,12 +1783,12 @@ int main() {
     free(before);
 
 
-    Attribute* curAttr = malloc(sizeof(Attribute));
+    // Attribute* curAttr = malloc(sizeof(Attribute));
 
-    curAttr->name = malloc (100);
-    curAttr->value = malloc (100);
-    strcpy(curAttr->name, (char*)"opacity");
-    strcpy(curAttr->value, (char*)"0.4");
+    // curAttr->name = malloc (100);
+    // curAttr->value = malloc (100);
+    // strcpy(curAttr->name, (char*)"opacity");
+    // strcpy(curAttr->value, (char*)"0.4");
 
     // Circle* circle = malloc(sizeof(Circle));
     // circle->cx = 3.4;
@@ -1811,7 +1829,7 @@ int main() {
 
     // addComponent(img, PATH, path);
 
-    char*  test = groupListToJSON(img->groups);
+    char*  test = SVGtoJSON(img);
     printf("group -> %s\n", test);
     free(test);
     // deleteGroup(g);
