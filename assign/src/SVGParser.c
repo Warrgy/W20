@@ -1479,6 +1479,7 @@ void changeAttr(List* list, Attribute* attr) {
     insertBack(list,attr);
 }
 
+//Go through the list and add the attribute to the specified location in the list
 void changeAttrInList(List* list, int elemIndex, Attribute* newAttribute, char type) {
     ListIterator itr = createIterator(list);
     void* node = nextElement(&itr);
@@ -1529,6 +1530,7 @@ void changeAttrInList(List* list, int elemIndex, Attribute* newAttribute, char t
 	}
 }
 
+//Will add an attribute to the corresponding component/list. This function will call the changeAttrInList to find the attribute in the list specified.
 void setAttribute(SVGimage* image, elementType elemType, int elemIndex, Attribute* newAttribute) {
     if (image == NULL || newAttribute == NULL || elemType > 4 || elemType < 0 || elemIndex < 0)
         return; 
@@ -1552,6 +1554,7 @@ void setAttribute(SVGimage* image, elementType elemType, int elemIndex, Attribut
     }
 }
 
+//Will add either a rectangle, circle, or path into the SVGimage.
 void addComponent(SVGimage* image, elementType type, void* newElement) {
     if (image == NULL || type < 1 || type > 3 || newElement == NULL) 
         return;
@@ -1568,6 +1571,35 @@ void addComponent(SVGimage* image, elementType type, void* newElement) {
     }
 }
 
+//Convert an attribute to a JSON string.
+char* attrToJSON(const Attribute *a) {
+    char* string = malloc(22 + strlen(a->name) + strlen(a->value) + 1);
+
+    sprintf(string, "{\"name\":\"%s\",\"value\":\"%s\"}", a->name, a->value);
+
+    return string;
+}
+
+//Convert a circle to a JSON string.
+char* circleToJSON(const Circle *c) {
+    char* string = malloc(40 + (sizeof(float) * 4) + sizeof(int) + strlen(c->units) + 1);
+
+    sprintf(string, "{\"cx\":%f,\"cy\":%f,\"r\":%f,\"numAttr\":%d,\"units\":\"%s\"}", c->cx, c->cy, c->r, getAttrNum(c->otherAttributes,'a'), c->units);
+
+    return string;
+}
+
+//Converts a rectangle to a JSON string.
+char* rectToJSON(const Rectangle *r) {
+    char* string = malloc(43 + (sizeof(float) * 4 * 4) + sizeof(int) + strlen(r->units) + 1);
+
+    sprintf(string, "{\"x\":%f,\"y\":%f,\"w\":%f,\"h\":%f,\"numAttr\":%d,\"units\":\"%s\"}", r->x, r->y, r->width, r->height, getAttrNum(r->otherAttributes, 'a'), r->units);
+
+    return string;
+}
+
+
+
 int main() {
     SVGimage* img = createValidSVGimage("rect.svg", "svg.xsd");
 
@@ -1583,20 +1615,42 @@ int main() {
     strcpy(curAttr->name, (char*)"opacity");
     strcpy(curAttr->value, (char*)"0.4");
 
+    // Circle* circle = malloc(sizeof(Circle));
+    // circle->cx = 3.4;
+    // circle->cy = 2.1;
+    // circle->r = 8.2;
+    // strcpy(circle->units, "cm");
+    // circle->otherAttributes = initializeList(&attributeToString, &deleteAttribute, &compareAttributes);
+    // insertBack(circle->otherAttributes, curAttr);
+
+    
+
+
+    // deleteCircle(circle);
+    // deleteAttribute(curAttr);
+
     Rectangle* rect = malloc(sizeof(Rectangle));
     rect->x = 69.0;
     rect->y = 69.0;
     rect->height = 49.0;
     rect->width = 49.0;
-    strcpy(rect->units, "");
+    strcpy(rect->units, "cm");
     rect->otherAttributes = initializeList(&attributeToString, &deleteAttribute, &compareAttributes);
+    insertBack(rect->otherAttributes, curAttr);
+    
 
-    addComponent(img, RECT, rect);
-    setAttribute(img, RECT, 1, curAttr);
 
-    char* after = SVGimageToString(img);
-    printf("AFTER:\n%s\n", after);
-    free(after);
+    char*  test = rectToJSON(rect);
+    printf("rect -> %s\n", test);
+    free(test);
+    deleteRectangle(rect);
+
+    // addComponent(img, RECT, rect);
+    // setAttribute(img, RECT, 1, curAttr);
+
+    // char* after = SVGimageToString(img);
+    // printf("AFTER:\n%s\n", after);
+    // free(after);
 
 
     bool ans = validateSVGimage(img, "svg.xsd");
