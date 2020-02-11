@@ -526,11 +526,16 @@ static void addGListsToList(List* new, List* old, char type) {
 	}
 }
 
+//For freeing
+void dummyFunction() {
+
+}
+
 // Function that returns a list of all rectangles in the image.
 List* getRects(SVGimage* img) {
     if (img == NULL)
         return NULL;
-    List* rects = initializeList(&rectangleToString, &deleteRectangle, &compareRectangles);
+    List* rects = initializeList(&rectangleToString, &dummyFunction, &compareRectangles);
     
     //Get rectangles in the immediate image
     addListElemToDiffList(rects, img->rectangles);
@@ -544,7 +549,7 @@ List* getRects(SVGimage* img) {
 List* getCircles(SVGimage* img) {
     if (img == NULL)
         return NULL;
-    List* circ = initializeList(&circleToString, &deleteCircle, &compareCircles);
+    List* circ = initializeList(&circleToString, &dummyFunction, &compareCircles);
 
     //Get circles in the immediate image
     addListElemToDiffList(circ, img->circles);
@@ -558,7 +563,7 @@ List* getCircles(SVGimage* img) {
 List* getGroups(SVGimage* img) {
     if (img == NULL)
         return NULL;
-    List* group = initializeList(&groupToString, &deleteGroup, &compareGroups);
+    List* group = initializeList(&groupToString, &dummyFunction, &compareGroups);
 
     //Get groups in the immediate image
     addListElemToDiffList(group, img->groups);
@@ -572,7 +577,7 @@ List* getGroups(SVGimage* img) {
 List* getPaths(SVGimage* img) {
     if (img == NULL)
         return NULL;
-    List* paths = initializeList(&pathToString, &deletePath, &comparePaths);
+    List* paths = initializeList(&pathToString, &dummyFunction, &comparePaths);
 
     //Get paths in the immediate image
     addListElemToDiffList(paths, img->paths);
@@ -1571,10 +1576,18 @@ void addComponent(SVGimage* image, elementType type, void* newElement) {
     }
 }
 
+//Return the null string for the JSON strings.
+//Data must not be more than 2 characters!!!
+char* nullReturnValueJSON(char* data) {
+    char* string = malloc(3);
+    strcpy(string,data);
+    return string;
+}
+
 //Convert an attribute to a JSON string.
 char* attrToJSON(const Attribute *a) {
     if (a == NULL)
-        return "{}";
+        return nullReturnValueJSON("{}");
 
     char* string = malloc(22 + strlen(a->name) + strlen(a->value) + 1);
 
@@ -1586,11 +1599,11 @@ char* attrToJSON(const Attribute *a) {
 //Convert a circle to a JSON string.
 char* circleToJSON(const Circle *c) {
     if (c == NULL)
-        return "{}";
+        return nullReturnValueJSON("{}");
 
     char* string = malloc(40 + (sizeof(float) * 4) + sizeof(int) + strlen(c->units) + 1);
 
-    sprintf(string, "{\"cx\":%f,\"cy\":%f,\"r\":%f,\"numAttr\":%d,\"units\":\"%s\"}", c->cx, c->cy, c->r, getAttrNum(c->otherAttributes,'a'), c->units);
+    sprintf(string, "{\"cx\":%.2f,\"cy\":%.2f,\"r\":%.2f,\"numAttr\":%d,\"units\":\"%s\"}", c->cx, c->cy, c->r, getAttrNum(c->otherAttributes,'a'), c->units);
 
     return string;
 }
@@ -1598,11 +1611,11 @@ char* circleToJSON(const Circle *c) {
 //Converts a rectangle to a JSON string.
 char* rectToJSON(const Rectangle *r) {
     if (r == NULL)
-        return "{}";
+        return nullReturnValueJSON("{}");
 
     char* string = malloc(43 + (sizeof(float) * 4 * 4) + sizeof(int) + strlen(r->units) + 1);
 
-    sprintf(string, "{\"x\":%f,\"y\":%f,\"w\":%f,\"h\":%f,\"numAttr\":%d,\"units\":\"%s\"}", r->x, r->y, r->width, r->height, getAttrNum(r->otherAttributes, 'a'), r->units);
+    sprintf(string, "{\"x\":%.2f,\"y\":%.2f,\"w\":%.2f,\"h\":%.2f,\"numAttr\":%d,\"units\":\"%s\"}", r->x, r->y, r->width, r->height, getAttrNum(r->otherAttributes, 'a'), r->units);
 
     return string;
 }
@@ -1610,7 +1623,7 @@ char* rectToJSON(const Rectangle *r) {
 //Converts a path to a JSON string.
 char* pathToJSON(const Path *p) {
     if (p == NULL)
-        return "{}";
+        return nullReturnValueJSON("{}");
 
     char *string = malloc(19 + strlen(p->data) + sizeof(int) + 1);
 
@@ -1637,7 +1650,7 @@ static int getImmediateChildCount(List* list) {
 //Converts a group to a JSON string.
 char* groupToJSON(const Group *g) {
     if (g == NULL)
-        return "{}";
+        return nullReturnValueJSON("{}");
 
     int children = getImmediateChildCount(g->rectangles);
     children += getImmediateChildCount(g->circles);
@@ -1697,7 +1710,7 @@ static char* getJSONString(List* list, char type) {
 //Get the JSON string for a list of attributes.
 char* attrListToJSON(const List *list) {
     if (list == NULL) 
-        return "[]";
+        return nullReturnValueJSON("[]");
 
     char* string = getJSONString((List*)list, 'a');
 
@@ -1707,7 +1720,7 @@ char* attrListToJSON(const List *list) {
 //Get the JSON string for a list of circles.
 char* circListToJSON(const List *list) {
     if (list == NULL)
-        return "[]";
+        return nullReturnValueJSON("[]");
 
     char* string = getJSONString((List*)list, 'c');
 
@@ -1717,7 +1730,7 @@ char* circListToJSON(const List *list) {
 //Get the JSON string for a list of rectangles.
 char* rectListToJSON(const List *list) {
     if (list == NULL)
-        return "[]";
+        return nullReturnValueJSON("[]");
 
     char* string = getJSONString((List*)list, 'r');
 
@@ -1727,7 +1740,7 @@ char* rectListToJSON(const List *list) {
 //Get the JSON string for a list of paths.
 char* pathListToJSON(const List *list) {
     if (list == NULL)
-        return "[]";
+        return nullReturnValueJSON("[]");
     
     char* string = getJSONString((List*)list, 'p');
 
@@ -1737,42 +1750,270 @@ char* pathListToJSON(const List *list) {
 //Get the JSON string for a list of groups.
 char* groupListToJSON(const List *list) {
     if (list == NULL)
-        return "[]";
+        return nullReturnValueJSON("[]");
     
     char* string = getJSONString((List*)list, 'g');
 
     return string;
 }
 
-
-
 //Get the JSON string for an entire SVGimage;
 char* SVGtoJSON(const SVGimage* imge) {
-    if (imge == NULL)
-        return "{}";
+    if (imge == NULL) 
+        return nullReturnValueJSON("{}");
 
     List* rects = getRects((SVGimage*)imge);
     int rNum = getImmediateChildCount(rects);
-    free(rects);
+    freeList(rects);
     
     List* circles = getCircles((SVGimage*)imge);
     int cNum = getImmediateChildCount(circles);
-    free(circles);
+    freeList(circles);
 
     List* paths = getPaths((SVGimage*)imge);
     int pNum = getImmediateChildCount(paths);
-    free(paths);
+    freeList(paths);
 
     List* groups = getGroups((SVGimage*)imge);
     int gNum = getImmediateChildCount(groups);
-    free(groups);
+    freeList(groups);
 
     char* string = malloc(48 + (sizeof(int) * 4) + 1);
 
-    //setup helper to get the number of nodes in the list(might have already made one) and then call the getters.
     sprintf(string, "{\"numRect\":%d,\"numCirc\":%d,\"numPaths\":%d,\"numGroups\":%d}", rNum, cNum, pNum, gNum);
 
     return string;
+}
+
+
+//Will convert a JSON string to a SVGimage.
+SVGimage* JSONtoGPX(const char* svgString) {
+    if (svgString == NULL) 
+        return NULL;
+    
+    SVGimage* image = malloc(sizeof(SVGimage));
+    strcpy(image->namespace, "http://www.w3.org/2000/svg");
+    image->rectangles = initializeList(&rectangleToString, &deleteRectangle, &compareRectangles);
+    image->circles = initializeList(&circleToString, &deleteCircle, &compareCircles);
+    image->paths = initializeList(&pathToString, &deletePath, &comparePaths);
+    image->groups = initializeList(&groupToString, &deleteGroup, &compareGroups);
+    image->otherAttributes = initializeList(&attributeToString, &deleteAttribute, &compareAttributes);
+    char c;
+    bool lever = false;
+    bool gotTitle = false;
+    bool gotDescription = false;
+    
+    int j = 0;
+    //Iterate through the string
+    for (int i = 0; i < strlen(svgString); i++) {
+        //If you got title and description. Return.
+        if (gotTitle && gotDescription)
+            break;
+        //Get the current character
+        c = svgString[i];
+        //if you found a ':' then prepare for getting a value. Remove the next '"', switch the lever to tell you to start getting the letters, reset j, run loop again.
+        if (c == ':') {
+            i++;
+            c = svgString[i];
+            if (c == '\"') {
+                lever = true;
+                j = 0;
+                continue;
+            }
+        }
+        //Currently on get data mode
+        if (lever) {
+            //If done get data mode, then flip the lever. and swap the corresponding gotTitle and gotDescription
+            if (c == '\"') {
+                lever = false;
+                if (!gotTitle)
+                    gotTitle = true;
+                else if (!gotDescription)
+                    gotDescription = true;
+                continue;;
+            }
+            //Put char into current string 
+            if (!gotTitle) {
+                (image->title)[j] = c;
+            } else {
+                (image->description)[j] = c;
+            }                
+        }
+        j++;
+    }
+    return image;
+}
+
+//Will convert a JSON string into a rectangle.
+Rectangle* JSONtoRect(const char* svgString) {
+    if (svgString == NULL)
+        return NULL;
+
+    Rectangle* r = malloc(sizeof(Rectangle));
+    r->otherAttributes = initializeList(&attributeToString, &deleteAttribute, &compareAttributes);
+    
+    char c;
+    bool lever = false;
+    bool gotX = false;
+    bool gotY = false;
+    bool gotW = false;
+    bool gotH = false;
+    bool gotUnits = false;
+    char* x = malloc(20);
+    char* y = malloc(20);
+    char* w = malloc(20);
+    char* h = malloc(20);
+    char* units = malloc(20);
+    
+    int j = 0;
+    //Iterate through the string
+    for (int i = 0; i < strlen(svgString); i++) {
+        //If you got all the data. Return.
+        if (gotX && gotY && gotW && gotH && gotUnits)
+            break;
+
+        //Get the current character
+        c = svgString[i];
+
+        //if you found a ':' then prepare for getting a value. Remove the next '"' if applicable, switch the lever to tell you to start getting the letters, reset j, run loop again(if next is units).
+        if (c == ':') {
+            i++;
+            c = svgString[i];
+            lever = true;
+            j = 0;
+            if (gotX && gotY && gotW && gotH)
+                if (c == '\"') {
+                    continue;
+                }
+            
+        }
+        //Currently on get data mode
+        if (lever) {
+            //If done get data mode, then flip the lever. and swap the corresponding boolean values
+            if (c == '\"') {
+                lever = false;
+                if (!gotX)
+                    gotX = true;
+                else if (!gotY)
+                    gotY = true;
+                else if (!gotW)
+                    gotW = true;
+                else if (!gotH)
+                    gotH = true;
+                else if (!gotUnits)
+                    gotUnits = true;
+                continue;
+            }
+            //Put char into current string 
+            if (!gotX)
+                x[j] = c;
+            else if (!gotY)
+                y[j] = c;
+            else if (!gotW) 
+                w[j] = c;
+            else if (!gotH)
+                h[j] = c;
+            else if (!gotUnits)
+                units[j] = c;        
+        }
+        j++;
+    }
+
+    r->x = atof(x);
+    r->y = atof(y);
+    r->height = atof(h);
+    r->width = atof(w);
+    strcpy(r->units, units);
+
+    free(x);
+    free(y);
+    free(h);
+    free(w);
+    free(units);
+
+    return r;
+}
+
+//Will convert a JSON string into a Circle.
+Circle* JSONtoCircle(const char* svgString) {
+    if (svgString == NULL)
+        return NULL;
+    
+    Circle* circ = malloc(sizeof(Circle));
+    circ->otherAttributes = initializeList(&attributeToString, &deleteAttribute, &compareAttributes);
+
+    char c;
+    bool lever = false;
+    bool gotCX = false;
+    bool gotCY = false;
+    bool gotR = false;
+    bool gotUnits = false;
+    char* cx = malloc(20);
+    char* cy = malloc(20);
+    char* r = malloc(20);
+    char* units = malloc(20);
+    
+    int j = 0;
+    //Iterate through the string
+    for (int i = 0; i < strlen(svgString); i++) {
+        //If you got all the data. Return.
+        if (gotCX && gotCY && gotR && gotUnits)
+            break;
+
+        //Get the current character
+        c = svgString[i];
+
+        //if you found a ':' then prepare for getting a value. Remove the next '"' if applicable, switch the lever to tell you to start getting the letters, reset j, run loop again(if next is units).
+        if (c == ':') {
+            i++;
+            c = svgString[i];
+            lever = true;
+            j = 0;
+            if (gotCX && gotCY && gotR)
+                if (c == '\"') {
+                    continue;
+                }
+            
+        }
+        //Currently on get data mode
+        if (lever) {
+            //If done get data mode, then flip the lever. and swap the corresponding boolean values
+            if (c == '\"') {
+                lever = false;
+                if (!gotCX)
+                    gotCX = true;
+                else if (!gotCY)
+                    gotCY = true;
+                else if (!gotR)
+                    gotR = true;
+                else if (!gotUnits)
+                    gotUnits = true;
+                continue;
+            }
+            //Put char into current string 
+            if (!gotCX)
+                cx[j] = c;
+            else if (!gotCY)
+                cy[j] = c;
+            else if (!gotR) 
+                r[j] = c;
+            else if (!gotUnits)
+                units[j] = c;        
+        }
+        j++;
+    }
+
+    circ->cx = atof(cx);
+    circ->cy = atof(cy);
+    circ->r = atof(r);
+    strcpy(circ->units, units);
+
+    free(cx);
+    free(cy);
+    free(r);
+    free(units);
+
+    return circ;
 }
 
 int main() {
@@ -1781,66 +2022,6 @@ int main() {
     char* before = SVGimageToString(img);
     printf("BEFORE:\n%s\n", before);
     free(before);
-
-
-    // Attribute* curAttr = malloc(sizeof(Attribute));
-
-    // curAttr->name = malloc (100);
-    // curAttr->value = malloc (100);
-    // strcpy(curAttr->name, (char*)"opacity");
-    // strcpy(curAttr->value, (char*)"0.4");
-
-    // Circle* circle = malloc(sizeof(Circle));
-    // circle->cx = 3.4;
-    // circle->cy = 2.1;
-    // circle->r = 8.2;
-    // strcpy(circle->units, "cm");
-    // circle->otherAttributes = initializeList(&attributeToString, &deleteAttribute, &compareAttributes);
-    // insertBack(circle->otherAttributes, curAttr);
-
-
-    // deleteCircle(circle);
-    // deleteAttribute(curAttr);
-
-    // Rectangle* rect = malloc(sizeof(Rectangle));
-    // rect->x = 69.0;
-    // rect->y = 69.0;
-    // rect->height = 49.0;
-    // rect->width = 49.0;
-    // strcpy(rect->units, "cm");
-    // rect->otherAttributes = initializeList(&attributeToString, &deleteAttribute, &compareAttributes);
-    // insertBack(rect->otherAttributes, curAttr);
-    
-    // Path* path = malloc(sizeof(Path));
-    // path->data = malloc(100);
-    // strcpy(path->data, "d43");
-    // path->otherAttributes = initializeList(&attributeToString, &deleteAttribute, &compareAttributes);
-    // insertBack(path->otherAttributes, curAttr);
-
-    // Group* g = malloc(sizeof(Group));
-    // g->rectangles = initializeList(&rectangleToString, &deleteRectangle, &compareRectangles);
-    // g->circles = initializeList(&circleToString, &deleteCircle, &compareCircles);
-    // g->paths = initializeList(&pathToString, &deletePath, &comparePaths);
-    // g->groups = initializeList(&groupToString, &deleteGroup, &compareGroups);
-    // g->otherAttributes = initializeList(&attributeToString, &deleteAttribute, &compareAttributes);
-    // insertBack(g->paths, path);
-    // insertBack(g->otherAttributes, curAttr);
-    // insertBack(g->rectangles, rect);
-
-    // addComponent(img, PATH, path);
-
-    char*  test = SVGtoJSON(img);
-    printf("group -> %s\n", test);
-    free(test);
-    // deleteGroup(g);
-    // deletePath(path);
-    // deleteRectangle(rect);
-
-    // setAttribute(img, RECT, 1, curAttr);
-
-    // char* after = SVGimageToString(img);
-    // printf("AFTER:\n%s\n", after);
-    // free(after);
 
 
     bool ans = validateSVGimage(img, "svg.xsd");
