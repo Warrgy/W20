@@ -1614,7 +1614,8 @@ void setAttribute(SVGimage* image, elementType elemType, int elemIndex, Attribut
 void addComponent(SVGimage* image, elementType type, void* newElement) {
     if (image == NULL || type < 1 || type > 3 || newElement == NULL) 
         return;
-    
+    if (image->rectangles == NULL || image->circles == NULL || image->paths == NULL)
+        return;
     if (type == RECT) {
         Rectangle* r = (Rectangle*) newElement;
         insertBack(image->rectangles, r);
@@ -1838,7 +1839,7 @@ char* SVGtoJSON(const SVGimage* imge) {
 
 
 //Will convert a JSON string to a SVGimage.
-SVGimage* JSONtoGPX(const char* svgString) {
+SVGimage* JSONtoSVG(const char* svgString) {
     if (svgString == NULL) 
         return NULL;
     
@@ -2068,30 +2069,33 @@ Circle* JSONtoCircle(const char* svgString) {
 }
 
 int main() {
-    SVGimage* img = createValidSVGimage("rects copy.svg", "svg.xsd");
-    printf("numAttr before = %d\n", numAttr(img));
+    // SVGimage* img = createValidSVGimage("rects copy.svg", "svg.xsd");
+    // printf("numAttr before = %d\n", numAttr(img));
 
-    Attribute* attr = malloc(sizeof(Attribute));
-    attr->name = malloc(50);
-    attr->value = malloc(50);
-    strcpy(attr->name, "joker");
-    strcpy(attr->value, "0.4chicken");
+    // Attribute* attr = malloc(sizeof(Attribute));
+    // attr->name = malloc(50);
+    // attr->value = malloc(50);
+    // strcpy(attr->name, "joker");
+    // strcpy(attr->value, "0.4chicken");
 
-    setAttribute(img, SVG_IMAGE, 0, attr);
+    // setAttribute(img, SVG_IMAGE, 0, attr);
 
-    char* before = SVGimageToString(img);
-    printf("BEFORE:\n%s\n", before);
-    free(before);
+    // char* before = SVGimageToString(img);
+    // printf("BEFORE:\n%s\n", before);
+    // free(before);
 
-    printf("numAttr = %d\n", numAttr(img));
+    // printf("numAttr = %d\n", numAttr(img));
 
-    bool ans = validateSVGimage(img, "svg.xsd");
-    printf("ans = %d\n", ans);
+    // bool ans = validateSVGimage(img, "svg.xsd");
+    // printf("ans = %d\n", ans);
 
-    bool write = writeSVGimage(img, "test.svg");
-    printf("write = %d\n", write);
+    // bool write = writeSVGimage(img, "test.svg");
+    // printf("write = %d\n", write);
 
-    deleteSVGimage(img);
+    // deleteSVGimage(img);
+
+    unsigned char* test = (unsigned char*) "sfguishfgiuhgiudfhbgijdbhsgdifughisdufhgdfjbiubyrgtuybuhcsbhfbgfhudbhsovibuyerbgf husdfuydbhsibfusdbfisudhfiushfisdhfiusbdifbsdifbsibfihsbfuhidsbfihsbfhidsbfisbfihsdbfhisdbfidhsbfihsbfihdsbfihdsbfihsbfihsbdfihsbfishbfishfbsihdfbshibfishbfihsbdifhbihsdbfihsbfihsdbfhisdbfihsbdfihsdbfihsdbfihsbfihsbfhisbfihsfbsihbdihfbishbfihsbdfhisbfihsbdihfbshidbfhisdbfihsbfhisdbfhisbfhidsbhifbshidbfhidsbfhisdbfhisbfhisdbfihsbfsihbfhifsdbihsbfhisbfihsbfihdfsif";
+    checkLengthChar(test);
 
     printf("Done.\n");
     return 0;
