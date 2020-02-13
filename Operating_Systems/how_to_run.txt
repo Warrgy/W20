@@ -1,0 +1,35 @@
+$ indicates a command line prompt. Do not copy it when running the following material.
+
+So in the same folder as all of your .c files to compile run
+$ make
+
+If you don't know what make does Google may be friendly (just don't trust everything you read there)
+
+If successful (ie gcc didn't swear at you) you should now have a file name Dispatcher (there may or may not be a file extension)
+
+Try running
+$./Dispatcher
+and see what happens. It should fail with an appropriate error message
+
+To run it properly use
+$./Dispatcher 500 800 < test_inputs/test1.txt
+for round robin
+
+or
+
+$./Dispatcher 800 < test_inputs/test1.txt
+for shortest time remaining
+
+The above examples use file redirection to avoid having to hand type all of the input by hand.
+
+
+If you prefer to type the input in by hand run
+$./Dispatcher 500 800
+for round robin
+
+or
+
+$./Dispatcher 800
+for shortest time remaining
+
+In both cases the program will sit their blinking at you waiting for you to type in the input.
