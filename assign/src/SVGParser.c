@@ -49,18 +49,22 @@ static xmlDoc* getDocViaFile(char *fileName) {
     return doc;
 }
 
-//Checks to make sure the char can fit in a char[256] array
+//Checks to make sure the char can fit in a char[256] array. Returns dynamic string
 static const unsigned char* checkLengthChar(const unsigned char *string) {
     if (string == NULL)
         return NULL;
     
     int length = strlen((char*)string);
+
     if (length > 255) {
-        char* truncate = NULL;
+        char* truncate = malloc(256);
         strncpy((char*)truncate, (char*) string, 255);
         return (const unsigned char*)truncate;
+    } else {
+        char* str = malloc(strlen((char*)string) + 1);
+        strcpy((char*)str, (char*)string);
+        return (const unsigned char*)str;
     }
-    return string;
 }
 
 //Check the title string from the node and return
@@ -287,9 +291,12 @@ static SVGimage* convertXMLtoSVG(xmlNode* a_node, SVGimage* image) {
 
             //If cur_node->nsDef != NULL -> deal with namespace
             //Add and check the NAMESPACE to the SVGimage ----
-            if (checkNameSpace(cur_node->nsDef) != NULL) {
-                const unsigned char* ns = checkNameSpace(cur_node->nsDef);
-                strcpy(image->namespace, (char*) ns);
+            if (cur_node->nsDef != NULL) {
+                unsigned char* ns = (unsigned char*)checkNameSpace(cur_node->nsDef);
+                if (ns != NULL) {
+                    strcpy(image->namespace, (char*) ns);
+                    free(ns);
+                }
             }
             //-------------
         
@@ -299,8 +306,10 @@ static SVGimage* convertXMLtoSVG(xmlNode* a_node, SVGimage* image) {
             //Add and check the TITLE to the SVGimage -------
             if (paren->name !=NULL) {
                 if (strcmp(checkUppLowCase((char*)paren->name), (char*)"title") == 0) {
-                    if (checkTitle(cur_node) != NULL) {
-                        strcpy(image->title, checkTitle(cur_node));
+                    char* temp = checkTitle(cur_node);
+                    if (temp != NULL) {
+                        strcpy(image->title, temp);
+                        free(temp);
                     }
                 }
                 //---------------------
@@ -309,8 +318,10 @@ static SVGimage* convertXMLtoSVG(xmlNode* a_node, SVGimage* image) {
                 //if name = desc
                 //Add and check the DESCRIPTION to the SVGimage ------
                 else if (strcmp(checkUppLowCase((char*)paren->name), (char*)"desc") == 0) {
-                    if (checkDescription(cur_node) != NULL) {
-                        strcpy(image->description, checkDescription(cur_node));
+                    char* temporary = checkDescription(cur_node);
+                    if (temporary != NULL) {
+                        strcpy(image->description, temporary);
+                        free(temporary);
                     }
                 }
             //--------------
@@ -1202,8 +1213,11 @@ static bool xmlAddOtherAttributes(xmlAttr* previous, List* attributes, xmlNode* 
     while (cur != NULL)
 	{
         Attribute* a = (Attribute*) cur;
-        if (a->name == NULL || a->value == NULL)
-            return false;
+        // printf("gonna add %s -> %s\n", a->name, a->value);
+        if (a->name == NULL || a->value == NULL) {
+            current = xmlNewProp(parent, (unsigned char*) "testetst", (unsigned char*) a->value);
+            // return false;
+        }
         //Create new attribute prop and link it to its siblings
         current = xmlNewProp(parent, (unsigned char*) a->name, (unsigned char*) a->value);
 
@@ -1230,8 +1244,8 @@ static bool addxmlAttr(void* val, char type, xmlNode* node) {
     //Setup the attribute list if the value is a rectangle
     if (type == 'r') {
         Rectangle* r = (Rectangle*) val;
-        if (r == NULL || r->otherAttributes == NULL)
-            return false;
+        if (r == NULL) return false;
+        if (r->otherAttributes == NULL) return false;
         //Set the x attribute
         unsigned char *x = floatToString(r->x, r->units);
         two = xmlNewProp(node, (unsigned char *)"x", x);
@@ -1262,8 +1276,8 @@ static bool addxmlAttr(void* val, char type, xmlNode* node) {
     //Setup the attribute list if the value is a circle
     else if (type == 'c') {
         Circle* c = (Circle *) val;
-        if (c == NULL || c->otherAttributes == NULL)
-            return false;
+        if (c == NULL) return false;
+        if (c->otherAttributes == NULL) return false;
         //Set the cx
         unsigned char* cx = floatToString(c->cx, c->units);
         one = xmlNewProp(node, (unsigned char *)"cx", cx);
@@ -1286,8 +1300,8 @@ static bool addxmlAttr(void* val, char type, xmlNode* node) {
     //Setup the attribute list if the value is a path
     else if (type == 'p') {
         Path* p = (Path*) val;
-        if (p->data == NULL || p->otherAttributes == NULL || p == NULL)
-            return false;
+        if (p == NULL) return false;
+        if (p->data == NULL || p->otherAttributes == NULL) return false;
         //Set the data
         one = xmlNewProp(node,(unsigned char*)"d", (unsigned char*)p->data);
         
@@ -1296,8 +1310,8 @@ static bool addxmlAttr(void* val, char type, xmlNode* node) {
     //Setup the attribute list if the value is a group
     else if (type == 'g') {
         Group* g = (Group*) val;
-        if (g == NULL || g->rectangles == NULL || g->circles == NULL || g->paths == NULL || g->groups == NULL || g->otherAttributes == NULL)
-            return NULL;
+        if (g == NULL) return false;
+        if (g->rectangles == NULL || g->circles == NULL || g->paths == NULL || g->groups == NULL || g->otherAttributes == NULL) return false;
 
         result = xmlAddOtherAttributes(NULL, g->otherAttributes, node);
     }
@@ -1311,6 +1325,7 @@ static bool xmlAddList(List* list, char type, xmlNode* olderSibling, xmlNs* ns) 
     xmlNode* node = NULL;
     xmlNode* prev = olderSibling;
     bool result = true;
+    bool overall = true;
 
     //Iterate through the list
     List* temp = list;
@@ -1323,6 +1338,7 @@ static bool xmlAddList(List* list, char type, xmlNode* olderSibling, xmlNs* ns) 
         node = xmlNewNode(NULL, (unsigned char*)"");
         xmlSetNs(node,ns);
         result = addxmlAttr(cur, type, node);
+        // if (!result) overall = false;
 
         //Add each rectangle to the link
         if (type == 'r') {
@@ -1346,13 +1362,13 @@ static bool xmlAddList(List* list, char type, xmlNode* olderSibling, xmlNs* ns) 
             xmlNode* child = xmlNewChild(node, NULL, (unsigned char*)"text", (unsigned char*)"");
 
             result = xmlAddList(g->rectangles, 'r', child, ns);
-            if (!result) return false;
+            if (!result) overall = false;
             result = xmlAddList(g->circles,'c', child, ns);
-            if (!result) return false;
+            if (!result) overall = false;
             result = xmlAddList(g->paths, 'p', child, ns);
-            if (!result) return false;
+            if (!result) overall = false;
             result = xmlAddList(g->groups, 'g', child, ns);
-            if (!result) return false;
+            if (!result) overall = false;
             
             //Free the node that was used as a start of the link for each groups children
             //Get the node from the lists if there was lists added.
@@ -1372,7 +1388,20 @@ static bool xmlAddList(List* list, char type, xmlNode* olderSibling, xmlNs* ns) 
         //Go to the next element in the list.
 		cur = nextElement(&itr);
 	}
-    return result;
+    return overall;
+}
+
+static void freeTempChild(xmlNode* root, xmlNode* child) {
+    //Free the node that was used as a start of the link for each groups children
+    //Get the node from the lists if there was lists added.
+    xmlNode* removeText = xmlNextElementSibling(child);
+    //Change the pointers to not have anything to do with the child node anymore.
+    if (removeText != NULL) {
+        root->children = removeText;
+        removeText->parent = root;
+        removeText->prev = NULL;
+    }
+    xmlFreeNode(child);
 }
 
 //This function will create a xmlDoc based off of the SVGimage struct.
@@ -1381,6 +1410,7 @@ static xmlDoc* svgToDoc(SVGimage* image) {
         return NULL;
 
     bool result = true;
+    bool overall = true;
 
     //Initialize xmlDoc and declare root pointer for the tree
     xmlDoc* doc = xmlNewDoc(NULL);
@@ -1395,7 +1425,7 @@ static xmlDoc* svgToDoc(SVGimage* image) {
 
     //Add the svg attributes
     result = xmlAddOtherAttributes(NULL, image->otherAttributes, root);
-    if (!result) return NULL;
+    if (!result) overall = false;
 
     //Make the "svg" node the root element in the xmlDoc.
     xmlDocSetRootElement(doc, root);
@@ -1410,33 +1440,32 @@ static xmlDoc* svgToDoc(SVGimage* image) {
     
     if (strlen(image->description) > 0)
         xmlNewTextChild(root, NULL, (const unsigned char*)"desc", (unsigned char*)image->description);
-    
+
     //Add the rectangle list to the nodes link.
     result = xmlAddList(image->rectangles, 'r', child, ns);
-    if (!result) return NULL;
+    if (!result) overall = false;
 
     //Add the circle list to the nodes link.
     result = xmlAddList(image->circles, 'c', child, ns);
-    if (!result) return NULL;
+    if (!result) overall = false;
 
     //Add the path list to the nodes link.
     result = xmlAddList(image->paths, 'p', child, ns);
-    if (!result) return NULL;
+    if (!result) overall = false;
     
     //Add the group list to the nodes link.
     result = xmlAddList(image->groups, 'g', child, ns);
-    if (!result) return NULL;
+    if (!result) overall = false;
 
-    //Free the node that was used as a start of the link for each groups children
-    //Get the node from the lists if there was lists added.
-    xmlNode* removeText = xmlNextElementSibling(child);
-    //Change the pointers to not have anything to do with the child node anymore.
-    if (removeText != NULL) {
-        root->children = removeText;
-        removeText->parent = root;
-        removeText->prev = NULL;
+    freeTempChild(root,child);
+
+    if (!overall) {
+        xmlFreeDoc(doc);
+        printf("got rekt\n");
+        xmlCleanupParser();
+        xmlMemoryDump();
+        return NULL;
     }
-    xmlFreeNode(child);
 
     return doc;
 }
@@ -1588,8 +1617,8 @@ void changeAttrInList(List* list, int elemIndex, Attribute* newAttribute, char t
 void setAttribute(SVGimage* image, elementType elemType, int elemIndex, Attribute* newAttribute) {
     if (image == NULL || newAttribute == NULL || elemType > 4 || elemType < 0)
         return; 
-    // if (newAttribute->name == NULL || newAttribute->value == NULL)
-    //     return;
+    if (newAttribute->name == NULL || newAttribute->value == NULL)
+        return;
     if (elemType == SVG_IMAGE) {
         if (strcmp(newAttribute->name, "title") == 0) {
             changeValue(image->title, newAttribute, NULL);
@@ -1618,12 +1647,15 @@ void addComponent(SVGimage* image, elementType type, void* newElement) {
         return;
     if (type == RECT) {
         Rectangle* r = (Rectangle*) newElement;
+        if (r->otherAttributes == NULL) return;
         insertBack(image->rectangles, r);
     } else if (type == CIRC) {
         Circle* c = (Circle*) newElement;
+        if (c->otherAttributes == NULL) return;
         insertBack(image->circles, c);
     } else if (type == PATH) {
         Path* p = (Path*) newElement;
+        if (p->otherAttributes == NULL) return;
         insertBack(image->paths, p);
     }
 }
@@ -2069,33 +2101,17 @@ Circle* JSONtoCircle(const char* svgString) {
 }
 
 int main() {
-    // SVGimage* img = createValidSVGimage("rects copy.svg", "svg.xsd");
-    // printf("numAttr before = %d\n", numAttr(img));
+    SVGimage* img = createValidSVGimage("quad01.svg", "svg.xsd");
+    printf("numAttr before = %d\n", numAttr(img));
 
-    // Attribute* attr = malloc(sizeof(Attribute));
-    // attr->name = malloc(50);
-    // attr->value = malloc(50);
-    // strcpy(attr->name, "joker");
-    // strcpy(attr->value, "0.4chicken");
 
-    // setAttribute(img, SVG_IMAGE, 0, attr);
+    bool ans = validateSVGimage(img, "svg.xsd");
+    printf("ans = %d\n", ans);
 
-    // char* before = SVGimageToString(img);
-    // printf("BEFORE:\n%s\n", before);
-    // free(before);
+    bool write = writeSVGimage(img, "test.svg");
+    printf("write = %d\n", write);
 
-    // printf("numAttr = %d\n", numAttr(img));
-
-    // bool ans = validateSVGimage(img, "svg.xsd");
-    // printf("ans = %d\n", ans);
-
-    // bool write = writeSVGimage(img, "test.svg");
-    // printf("write = %d\n", write);
-
-    // deleteSVGimage(img);
-
-    unsigned char* test = (unsigned char*) "sfguishfgiuhgiudfhbgijdbhsgdifughisdufhgdfjbiubyrgtuybuhcsbhfbgfhudbhsovibuyerbgf husdfuydbhsibfusdbfisudhfiushfisdhfiusbdifbsdifbsibfihsbfuhidsbfihsbfhidsbfisbfihsdbfhisdbfidhsbfihsbfihdsbfihdsbfihsbfihsbdfihsbfishbfishfbsihdfbshibfishbfihsbdifhbihsdbfihsbfihsdbfhisdbfihsbdfihsdbfihsdbfihsbfihsbfhisbfihsfbsihbdihfbishbfihsbdfhisbfihsbdihfbshidbfhisdbfihsbfhisdbfhisbfhidsbhifbshidbfhidsbfhisdbfhisbfhisdbfihsbfsihbfhifsdbihsbfhisbfihsbfihdfsif";
-    checkLengthChar(test);
+    deleteSVGimage(img);
 
     printf("Done.\n");
     return 0;
