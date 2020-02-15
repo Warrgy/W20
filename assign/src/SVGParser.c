@@ -2099,20 +2099,3 @@ Circle* JSONtoCircle(const char* svgString) {
 
     return circ;
 }
-
-int main() {
-    SVGimage* img = createValidSVGimage("quad01.svg", "svg.xsd");
-    printf("numAttr before = %d\n", numAttr(img));
-
-
-    bool ans = validateSVGimage(img, "svg.xsd");
-    printf("ans = %d\n", ans);
-
-    bool write = writeSVGimage(img, "test.svg");
-    printf("write = %d\n", write);
-
-    deleteSVGimage(img);
-
-    printf("Done.\n");
-    return 0;
-}
