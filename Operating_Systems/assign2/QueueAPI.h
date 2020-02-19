@@ -39,6 +39,8 @@ void Push(Queue* queue, void* toBeAdded);
 //Pop the top item off the queue
 void* Pop(Queue* queue);
 
+void insertFront(Queue* queue, void* toBeAdded);
+
 //Returns the data from the head node, without deleting the node.
 void* Peek(Queue* queue);
 
@@ -60,6 +62,8 @@ void* nextElement(QueueIterator* iter);
 
 //Get string representation of queue.
 char* toString(Queue* queue);
+
+void PushSorted(Queue* queue, void* toBeAdded);
 
 
 

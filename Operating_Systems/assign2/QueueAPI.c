@@ -79,6 +79,25 @@ void* Pop(Queue* queue) {
     return data;
 }
 
+void insertFront(Queue* queue, void* toBeAdded){
+	if (queue == NULL || toBeAdded == NULL){
+		return;
+	}
+	
+	(queue->length)++;
+
+	Node* newNode = initializeNode(toBeAdded);
+	
+    if (queue->head == NULL && queue->tail == NULL){
+        queue->head = newNode;
+        queue->tail = queue->head;
+    }else{
+		newNode->next = queue->head;
+        queue->head->prev = newNode;
+    	queue->head = newNode;
+    }
+}
+
 //Returns the data from the head node, without deleting the node.
 void* Peek(Queue* queue) {
     if (queue == NULL || queue->head == NULL)
@@ -156,4 +175,43 @@ QueueIterator createIterator(Queue* queue) {
     iter.current = queue->head;
 
     return iter;
+}
+
+void PushSorted(Queue* queue, void* toBeAdded) {
+    if (queue == NULL || toBeAdded == NULL){
+		return;
+	}
+
+	if (queue->head == NULL){
+		Push(queue, toBeAdded);
+		return;
+	}
+	
+	if (queue->compare(toBeAdded, queue->head->data) <= 0){
+		insertFront(queue, toBeAdded);
+		return;
+	}
+	
+	if (queue->compare(toBeAdded, queue->tail->data) > 0){
+		Push(queue, toBeAdded);
+		return;
+	}
+	
+	Node* currNode = queue->head;
+	
+	while (currNode != NULL){
+		if (queue->compare(toBeAdded, currNode->data) <= 0){
+			Node* newNode = initializeNode(toBeAdded);
+			newNode->next = currNode;
+			newNode->prev = currNode->prev;
+			currNode->prev->next = newNode;
+			currNode->prev = newNode;
+			(queue->length)++;
+
+			return;
+		}
+	
+		currNode = currNode->next;
+	}
+	
 }
