@@ -4,7 +4,7 @@ a2: *.c
 	gcc -Werror -Wall -g -std=c99 -o Dispatcher *.c
 
 run: 
-	./Dispatcher 800 < test_inputs/test6.txt
+	./Dispatcher 800 < test_inputs/test5.txt
 
 valgrind:
-	valgrind --leak-check=full --leak-resolution=med --track-origins=yes --show-leak-kinds=all ./Dispatcher 800 < test_inputs/test6.txt
+	valgrind --leak-check=full --leak-resolution=med --track-origins=yes --show-leak-kinds=all ./Dispatcher 800 < test_inputs/test5.txt
