@@ -4,6 +4,8 @@
 #include <stdio.h>
 #include <string.h>
 #include "LinkedListAPI.h"
+#include <libxml/parser.h>
+#include <libxml/tree.h>
 
 typedef struct name {
 	char* firstName;
@@ -73,101 +75,38 @@ void deleteFunc(void *toBeDeleted){
 }
 
 int main(void){
-	
-	Name* tmpName;
-	char tmpStr[100];
-	int memLen;
-	
-	/* 
-	Create the list.  The list is allocated on the stack, and initializeList returns the list struct.
-	*/
-	List* list = initializeList(&printFunc, &deleteFunc, &compareFunc);
-	
-	//Populate the list
-	for (int i = 0; i < 4; i++){
-		tmpName = (Name*)malloc(sizeof(Name));
-		tmpName->age = (i+1)*10;
-		
-		sprintf(tmpStr, "Name%d", i);
-		memLen = strlen(tmpStr)+2;
-		tmpName->firstName = (char*)malloc(sizeof(char)*memLen);
-		strcpy(tmpName->firstName, tmpStr);
-		
-		sprintf(tmpStr, "Lastname%d", i);
-		memLen = strlen(tmpStr)+2;
-		tmpName->lastName = (char*)malloc(sizeof(char)*memLen);
-		strcpy(tmpName->lastName, tmpStr);
-	
-		insertBack(list, (void*)tmpName);
-	}
-		
-	char* tmp = list->printData(getFromFront(list));
-	printf("First element in the list is: %s\n", tmp);
-	free(tmp);
-	tmp = list->printData(getFromBack(list));
-	printf("Last element in the list is: %s\n", tmp);
-	free(tmp);
-		
-	void* elem;
-	
-	//Create an iterator - again, the iterator is allocated on the stack
-	ListIterator iter = createIterator(list);
+	xmlDoc *doc = NULL;
+    xmlNode *root_element = NULL;
 
-	/*
-	Traverse the list using an iterator.  
-	nextElement() returns NULL ones we reach the end of the list
-	*/
-	while ((elem = nextElement(&iter)) != NULL){
-		Name* tmpName = (Name*)elem;
-		
-		/*
-		We use the printData function that we created to return a string representation 
-		of the data associated with the current node
-		*/
-		char* str = list->printData(tmpName);
-		printf("%s\n", str);
-		
-		//Since list.printData dynamically allocates the string, we must free it
-		free(str);
-	}
-	
-	printf("\n");
-	
-	/*
-	 Use deleteDataFromList to remove an element wirh a specific last name
-	 We use the last name since that is what compareFunc uses to compare two Names
-	*/ 
-	
-	Name searchName;
-	searchName.lastName = malloc(sizeof(char)*(strlen("Lastname1")+1));
-	strcpy(searchName.lastName, "Lastname1");
-	
-	void* retVal = deleteDataFromList(list, &searchName);
-	if (retVal != NULL){
-		Name* foundName = (Name*)retVal;
-		char* nameDescr = list->printData(foundName);
-		printf("Removed %s from the list\n", nameDescr);
-		list->deleteData(retVal);
-		free(nameDescr);
-	}else{
-		printf("A value with the last name Lastname1 not found the list\n");
-	}
-	free(searchName.lastName);
-		
-	char* listDescr = toString(list);
-	printf("After removal, the list is %s\n", listDescr);
-	free(listDescr);
-	
-	/*
-	Crear list contents - free each node, including its contents
-	Since the list is created in the stack, we don't need to free it. 
-	*/
-	freeList(list);	
-	
-	return 0;		
+    /*
+     * this initialize the library and check potential ABI mismatches
+     * between the version it was compiled for and the actual shared
+     * library used.
+     */
+    LIBXML_TEST_VERSION
+
+    /*parse the file and get the DOM */
+    doc = xmlReadFile("quad01.svg", NULL, 0);
+
+    if (doc == NULL) {
+        printf("error: could not parse file %s\n", argv[1]);
+    }
+
+    /*Get the root element node */
+    root_element = xmlDocGetRootElement(doc);
+
+    //print_element_names(root_element);
+
+    /*free the document */
+    xmlFreeDoc(doc);
+
+    /*
+     *Free the global variables that may
+     *have been allocated by the parser.
+     */
+    xmlCleanupParser();
+
 }
-
-
 
 
 
