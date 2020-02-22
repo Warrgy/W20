@@ -17,4 +17,11 @@
         <circle cx="50.8" cy="36" r="8" opacity=".8"/>
       </g>
   </g>
+  <g fill="none">
+    <rect x="1" y="1" width="1198" height="598"
+        stroke="blue" stroke-width="1" />
+
+    <path d="M200,300 Q400,50 600,300 T1000,300"
+        stroke="red" stroke-width="5"  />
+  </g>
 </svg>
