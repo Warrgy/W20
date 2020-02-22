@@ -1,3 +1,13 @@
+/**
+    Based off of CIS2750 LinkedListAPI - created by Denis Nikitenko
+
+    Transformation into Queue done by Cameron Fisher
+
+    ID: 1057347
+    Name: Cameron Fisher
+    Date: Feb 24
+
+*/
 
 #include "QueueAPI.h"
 
