@@ -1,10 +1,12 @@
 # W20
 This is where I store my Course work for my Winter 2020 semester at the University of Guelph
 
-__Name: Cameron Fisher 
-Student ID: 1057347__
+__Name: Cameron Fisher__
+
+__Student ID: 1057347__
 
 __All work done by @Warrgy (AKA Cameron Fisher)__
+
 
 * __Algorithms/__
   * AKA CIS3490
