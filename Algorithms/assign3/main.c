@@ -19,6 +19,7 @@ unsigned int BoyerMooreStringMatching(unsigned int* patternShifts);
 
 unsigned int globalArrayLength = 0;
 
+//Will get input. Is used in every algorithm.
 char* getInput() {
     char input[100];
     printf("Enter the string: ");
@@ -29,6 +30,7 @@ char* getInput() {
     return alloc;
 }
 
+//Frees 2D array
 void free2DArray(char** arr, unsigned int length) {
     for (unsigned int i = 0; i < length; i++) {
         free(arr[i]);
@@ -36,6 +38,7 @@ void free2DArray(char** arr, unsigned int length) {
     free(arr);
 }
 
+//Print 2D array
 void printArray(char** arr, unsigned int len) {
     for (unsigned int i = 0; i < len; i++) {
         if (arr[i] == NULL) {
@@ -116,7 +119,6 @@ int main(int argc, char *argv[]) {
         if (strcmp(argv[1], "2.1") == 0) {
             matches = bruteForceStringMatching(&patternShifts);
         } else if (strcmp(argv[1], "2.2") == 0) {
-            printf("Not implemented yet.\n");
             matches = HorspoolStringMatching(&patternShifts);
         } else {
             printf("Not implemented yet.");

@@ -1,6 +1,6 @@
 CC = gcc
 CFLAGS = -Wall -std=c11 -g -lm
-algorithm = 1.2
+algorithm = 2.2
 
 all: together
 
