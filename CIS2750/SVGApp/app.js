@@ -124,7 +124,92 @@ app.get('/getFileSize', (req, res) => {
   res.send({
     size: size
   });
-})
+});
+
+//Will return all valid files from the ./uploads/ folder
+app.get('/returnValidSVGFiles', (req, res) => {
+  fs.readdir('./uploads/', (err, items) => {
+    if (err) {
+      console.log("No files are available.");
+    }
+    let valid = ffi.Library('./libsvgparse', {
+      'checkIfValid': ['bool', ['string']]
+    });
+
+    let allValidFiles = [];
+    items.forEach(element => {
+      let f = valid.checkIfValid("./uploads/"+element);
+      if (f) {
+        allValidFiles.push(element);
+      } else {
+        console.log("file is not valid. " + element);
+      }
+    });
+    res.send({
+      validFiles: allValidFiles
+    })
+  })
+});
+
+app.get('/getTitle', (req, res) => {
+  let getTitle = ffi.Library('./libsvgparse', {
+    'getTitleJSON': ['string', ['string']]
+  });
+  let title = getTitle.getTitleJSON("./uploads/" + req.query.fileName);
+  res.send({
+    title: title
+  });
+});
+
+app.get('/getDescription', (req, res) => {
+  let getDesc = ffi.Library('./libsvgparse', {
+    'getDescJSON': ['string', ['string']]
+  });
+  let desc = getDesc.getDescJSON("./uploads/" + req.query.fileName);
+  res.send({
+    desc: desc
+  });
+});
+
+app.get('/getRects', (req, res) => {
+  let getRects = ffi.Library('./libsvgparse', {
+    'getRectsJSON': ['string', ['string']]
+  });
+  let rects = getRects.getRectsJSON("./uploads/" + req.query.fileName);
+  res.send({
+    rects: rects
+  });
+});
+
+app.get('/getCircs', (req, res) => {
+  let getCircles = ffi.Library('./libsvgparse', {
+    'getCircsJSON': ['string', ['string']]
+  });
+  let circs = getCircles.getCircsJSON("./uploads/" + req.query.fileName);
+  res.send({
+    circ: circs
+  });
+});
+
+app.get('/getPaths', (req, res) => {
+  let getPaths = ffi.Library('./libsvgparse', {
+    'getPathsJSON': ['string', ['string']]
+  });
+  let paths = getPaths.getPathsJSON("./uploads/" + req.query.fileName);
+  res.send({
+    paths: paths
+  });
+});
+
+app.get('/getGroups', (req, res) => {
+  let getGroups = ffi.Library('./libsvgparse', {
+    'getGroupsJSON': ['string', ['string']]
+  });
+  let groups = getGroups.getGroupsJSON("./uploads/" + req.query.fileName);
+  res.send({
+    groups: groups
+  });
+});
 
 app.listen(portNum);
 console.log('Running app at localhost: ' + portNum);

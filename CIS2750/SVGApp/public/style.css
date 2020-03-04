@@ -15,6 +15,11 @@ body {
 table,th,td {
     border: 2px solid black;
     text-align: center;
+} 
+table tr td img {
+    height: 400;
+    width: 700;
+    padding: 1;
 }
 a:link:hover {
     -webkit-transition: all 0.3s ease;

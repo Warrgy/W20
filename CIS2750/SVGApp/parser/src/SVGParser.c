@@ -2100,6 +2100,28 @@ Circle* JSONtoCircle(const char* svgString) {
     return circ;
 }
 
+char* titleToJSON(SVGimage* img) {
+    if (img == NULL) {
+        return nullReturnValueJSON("{}");
+    }
+    char *title = malloc(strlen(img->title) * sizeof(char) + 1 + 13);
+
+    sprintf(title, "{\"title\":\"%s\"}", img->title);
+
+    return title;
+}
+
+char* descToJSON(SVGimage* img) {
+    if (img == NULL) {
+        return nullReturnValueJSON("{}");
+    }
+    char* desc = malloc(strlen(img->description) * sizeof(char) + 1 + 12);
+
+    sprintf(desc, "{\"desc\":\"%s\"}", img->description);
+
+    return desc;
+}
+
 char* getSVGJSON(char* file) {
     const SVGimage* img = createValidSVGimage(file, "svg.xsd");
 
@@ -2107,4 +2129,69 @@ char* getSVGJSON(char* file) {
 
     deleteSVGimage((SVGimage*) img);
     return arr;
+}
+
+bool checkIfValid(char* file) {
+    SVGimage* img = createValidSVGimage(file, "svg.xsd");
+    if (img == NULL) {
+        deleteSVGimage(img);
+        return false;
+    } else {
+        deleteSVGimage(img);
+        return true;
+    }
+}
+
+char* getTitleJSON(char* file) {
+    SVGimage *img = createValidSVGimage(file, "svg.xsd");
+    char *title = malloc(strlen(img->title) + 1);
+    strcpy(title, img->title);
+
+    deleteSVGimage(img);
+    return title;
+}
+
+char* getDescJSON(char* file) {
+    SVGimage* img = createValidSVGimage(file, "svg.xsd");
+    char* description = malloc(strlen(img->description) + 1);
+    strcpy(description, img->description);
+
+    deleteSVGimage(img);
+    return description;
+}
+
+char* getRectsJSON(char* file) {
+    SVGimage* img = createValidSVGimage(file, "svg.xsd");
+
+    char *rects = rectListToJSON(img->rectangles);
+
+    deleteSVGimage(img);
+    return rects;
+}
+
+char *getCircsJSON(char* file) {
+    SVGimage *img = createValidSVGimage(file, "svg.xsd");
+
+    char *circles = circListToJSON(img->circles);
+
+    deleteSVGimage(img);
+    return circles;
+}
+
+char *getPathsJSON(char* file) {
+    SVGimage *img = createValidSVGimage(file, "svg.xsd");
+
+    char *paths = pathListToJSON(img->paths);
+
+    deleteSVGimage(img);
+    return paths;
+}
+
+char* getGroupsJSON(char* file) {
+    SVGimage *img = createValidSVGimage(file, "svg.xsd");
+
+    char *groups = groupListToJSON(img->groups);
+    
+    deleteSVGimage(img);
+    return groups;
 }

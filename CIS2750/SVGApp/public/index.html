@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>CHANGE ME</title>
+    <title>SVG Image Viewer</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="CHANGE ME">
+    <meta name="description" content="Display all SVG image contents, and be allowed to edit them.">
     <meta name="keywords" content="CHANGE ME">
     <meta name="author" content="Cameron Fisher">
     <!-- Load jquery, bootstrap -->
@@ -17,7 +17,7 @@
     <!-- Custom CSS End -->
 </head>
 <body>
-    <h3>My SVG Image Editor</h3>
+    <h3>SVG Image Viewer</h3>
     
     <table id="fileDisplay">
         <tr>
@@ -30,6 +30,23 @@
             <th>Number of groups</th>
         </tr>
     </table>
+    <div id="uploadFile">
+    </div>
+
+    <form class="dropDown" id="dropDownMenu">
+        <p>Please select a file</p>
+        <fieldset>
+            <select name="files" id="files">
+                <option value="none"></option>
+            </select>
+            <input type="button" value="change file" onclick="displayDetails()">
+        </fieldset>
+    </form>
+
+    <table id="individualDetails">
+
+    </table>
+
     If the A3 stub is running and rects.svg exists in the uploads/ directory on the server, then clicking on the link below will download it from the server.<br>
     <a href="rects.svg">rects.svg</a>
     <p></p>
@@ -48,32 +65,6 @@
         </div>
     </form>
     <!-- Leave me at the bottom of body -->
-    <script>
-        const data = {3 : "Testing Testing", "jimmy": 4};
-        console.log("data getting sent to server is: " + JSON.stringify(data));
-        const options = {
-            method: 'POST',
-            headers: {
-                'Content-Type' : 'application/json'
-            },
-            body: JSON.stringify(data),
-        }
-        // console.log(data);
-        fetch('/test', options).then(function(response) {
-            if (response.status !== 200) {
-                console.log('Looks like there was a problem. Status Code: ' +
-                response.status);
-                return;
-            }
-
-            // Examine the text in the response
-            response.json().then(function(data) {
-                console.log(" data from server is: " + JSON.stringify(data));
-            });
-
-        });
-
-    </script>
     <script src="/index.js"></script>
 </body>
 </html>
