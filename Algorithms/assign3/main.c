@@ -111,7 +111,7 @@ int main(int argc, char *argv[]) {
         free2DArray(Anagrams, numAnagrams);
 
     //String matching
-    } else if (strcmp(argv[1], "2.1") == 0 || strcmp(argv[1],"2.2") == 0 || strcmp(argv[1],"2.3")) {
+    } else if (strcmp(argv[1], "2.1") == 0 || strcmp(argv[1],"2.2") == 0 || strcmp(argv[1],"2.3") == 0) {
         unsigned int matches = 0;
         unsigned int patternShifts = 0;
 
@@ -121,7 +121,7 @@ int main(int argc, char *argv[]) {
         } else if (strcmp(argv[1], "2.2") == 0) {
             matches = HorspoolStringMatching(&patternShifts);
         } else {
-            printf("Not implemented yet.");
+            printf("Not implemented yet.\n");
             matches = BoyerMooreStringMatching(&patternShifts);
         }
 
