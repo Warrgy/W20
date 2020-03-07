@@ -1,0 +1,3 @@
+Estradiol concentration in US and Chinese men: (41.9, 44.8)
+
+According to the study, we can be 95% sure that estradiol concentrations in US and Chinese men lie between 41.9pg/ml and 44.8pg/ml

@@ -1,0 +1,8 @@
+0.0026 means that we can be reasonably confident
+that the true population mean lies within 0.0026 of the reported mean.
+0.0026 is the standard deviation of the sampling distribution. Since
+on a normal distribution roughly 68.3% of measurements lie within one
+standard deviation of the mean and 0.0026 is the standard deviation of
+the sampling distribution, we can be be 68.3% confident that the true
+mean 2D:4D ratios of people with congenital adrenal hyperplasia is
+within 0.0026 of the reported mean.
