@@ -144,6 +144,7 @@ function getFileSize(fileURL) {
     });
 }
 
+//Create the drop down to choose which file they wanat to view
 function dropDown() {
     $.ajax({
         type: 'get',            //Request type
@@ -170,6 +171,7 @@ function dropDown() {
     });
 }
 
+//Call the display function for the selected file
 function displayDetails() {
     let root = document.getElementById('files');
     let val = $("#files :selected").text();
@@ -180,11 +182,16 @@ function displayDetails() {
     displayIndividualDetails(val);
 }
 
+//Display all the details for the svg file selected
 function displayIndividualDetails(file) {
     console.log("going to display values for the file: [" + file + "]");
     let root = document.getElementById('individualDetails');
     while (root.hasChildNodes()) {
         root.removeChild(root.firstChild);
+    }
+    let rootAttr = document.getElementById('attributeTable');
+    while (rootAttr.hasChildNodes()) {
+        rootAttr.removeChild(rootAttr.firstChild);
     }
     if (file == "") {
         return;
@@ -239,6 +246,7 @@ function displayIndividualDetails(file) {
     addComponentDetails(file, root);
 }
 
+//Get the title of the svg file, then paste it in the cell
 function getTitle(file, titleCell) {
     $.ajax({
         type: "get",
@@ -266,6 +274,7 @@ function getTitle(file, titleCell) {
     });
 }
 
+//Get the description of the svg file, then paste it in the cell
 function getDescription(file, descCell) {
     $.ajax({
         type: "get",
@@ -291,6 +300,7 @@ function getDescription(file, descCell) {
     });
 }
 
+//List off all the rectangles, paths, circles, and groups that are in the svg file
 function addComponentDetails(file, root) {
     $.ajax({
         type: "get",
@@ -310,7 +320,16 @@ function addComponentDetails(file, root) {
                 let dataCell = document.createElement("td");
                 dataCell.innerHTML = "x: " + dataCur.x + dataCur.units + " y: " + dataCur.y + dataCur.units + " width: " + dataCur.w + dataCur.units + " height: " + dataCur.h + dataCur.units;
                 let attributes = document.createElement("td");
-                attributes.innerHTML = dataCur.numAttr;
+                attributes.innerHTML = "  " + dataCur.numAttr + "  ";
+
+                let showAttr = document.createElement("input");
+                showAttr.type = "button";
+                showAttr.value = "Show";
+                showAttr.onclick = function () {
+                    showAttributes(dataCur, file, "r");
+                };
+                attributes.appendChild(showAttr);
+
                 main.append(name, dataCell, attributes);
                 root.appendChild(main);
                 dataCell.colSpan = "2";
@@ -341,7 +360,16 @@ function addComponentDetails(file, root) {
                 let dataCell = document.createElement("td");
                 dataCell.innerHTML = "x: " + dataCur.cx + dataCur.units + " y: " + dataCur.cy + dataCur.units + " r: " + dataCur.r + dataCur.units;
                 let attributes = document.createElement("td");
-                attributes.innerHTML = dataCur.numAttr;
+                attributes.innerHTML = "  " + dataCur.numAttr + "  ";
+
+                let showAttr = document.createElement("input");
+                showAttr.type = "button";
+                showAttr.value = "Show";
+                showAttr.onclick = function () {
+                    showAttributes(dataCur, file, "c");
+                };
+                attributes.appendChild(showAttr);
+
                 main.append(name, dataCell, attributes);
                 root.appendChild(main);
                 dataCell.colSpan = "2";
@@ -372,7 +400,16 @@ function addComponentDetails(file, root) {
                 let dataCell = document.createElement("td");
                 dataCell.innerHTML = "data: " + dataCur.d;
                 let attributes = document.createElement("td");
-                attributes.innerHTML = dataCur.numAttr;
+                attributes.innerHTML = "  " + dataCur.numAttr + "  ";
+
+                let showAttr = document.createElement("input");
+                showAttr.type = "button";
+                showAttr.value = "Show";
+                showAttr.onclick = function () {
+                    showAttributes(dataCur, file, "p");
+                };
+                attributes.appendChild(showAttr);
+
                 main.append(name, dataCell, attributes);
                 root.appendChild(main);
                 dataCell.colSpan = "2";
@@ -403,7 +440,16 @@ function addComponentDetails(file, root) {
                 let dataCell = document.createElement("td");
                 dataCell.innerHTML = dataCur.children + " child elements";
                 let attributes = document.createElement("td");
-                attributes.innerHTML = dataCur.numAttr;
+                attributes.innerHTML = "  " + dataCur.numAttr + "  ";
+
+                let showAttr = document.createElement("input");
+                showAttr.type = "button";
+                showAttr.value = "Show";
+                showAttr.onclick = function () {
+                    showAttributes(dataCur, file, "g");
+                };
+                attributes.appendChild(showAttr);
+
                 main.append(name, dataCell, attributes);
                 root.appendChild(main);
                 dataCell.colSpan = "2";
@@ -413,6 +459,72 @@ function addComponentDetails(file, root) {
         fail: err => {
             console.log("Error occured in displaying details for paths: " + err);
             alert("Error occured in displaying details for paths: " + err);
+        }
+    });
+}
+
+//Display the list of all the attributes.
+function showAttributes(JSONString, fileName, type) {
+    let root = document.getElementById('attributeTable');
+    while (root.hasChildNodes()) {
+        root.removeChild(root.firstChild);
+    }
+    let URl = '';
+    if (type === "r") {
+        URL = '/JSONtoAttrsRect';
+    } else if (type === "c") {
+        URL = '/JSONtoAttrsCirc';
+    } else if (type === "p") {
+        URL = '/JSONtoAttrsPath';
+    } else if (type === "g") {
+        URL = '/JSOntoAttrsGroup';
+    }
+    $.ajax({
+        type: "get",
+        dataType: "json",
+        url: URL,
+        data: {
+            string: JSON.stringify(JSONString),
+            fileName: fileName
+        },
+        success: data => {
+            let attributes = JSON.parse(data.attrs);
+            if (attributes.length > 0) {
+                let titleRow = document.createElement("tr");
+                let title = document.createElement("td");
+                let b = document.createElement("b");
+                b.innerHTML = "Chosen attributes are:";
+                title.colSpan = "2";
+                title.append(b);
+                titleRow.append(title);
+                root.appendChild(titleRow);
+
+                let headerRow = document.createElement("tr");
+                let headerName = document.createElement("td");
+                let text = document.createElement("h5");
+                text.innerHTML = "Name";
+                headerName.append(text);
+                let headerValue = document.createElement("td");
+                text = document.createElement("h5");
+                text.innerHTML = "Value";
+                headerValue.append(text);
+                headerRow.append(headerName, headerValue);
+                root.appendChild(headerRow);
+
+                attributes.forEach(elem => {
+                    let row = document.createElement("tr");
+                    let name = document.createElement("td");
+                    name.innerHTML = elem.name;
+                    let value = document.createElement("td");
+                    value.innerHTML = elem.value;
+                    row.append(name, value);
+                    root.appendChild(row);
+                });
+            }
+        },
+        fail: err => {
+            console.log("Error occured in getting attributes: " + err);
+            alert("Error occured in getting attributes: " + err);
         }
     });
 }

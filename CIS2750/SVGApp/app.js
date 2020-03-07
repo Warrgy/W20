@@ -102,9 +102,7 @@ app.get('/getSVGJSON', (req,res) => {
   let rects = ffi.Library('./libsvgparse', {
     'getSVGJSON': [ 'string', [ 'string' ] ]
   });
-  console.log("passing file name to C: " + req.query.file);
   let contents = rects.getSVGJSON(req.query.file);
-  console.log("the contents from C are: " + contents);
   let temp = JSON.parse(contents);
   res.send(temp);
 });
@@ -208,6 +206,46 @@ app.get('/getGroups', (req, res) => {
   let groups = getGroups.getGroupsJSON("./uploads/" + req.query.fileName);
   res.send({
     groups: groups
+  });
+});
+
+app.get('/JSONtoAttrsRect', (req, res) => {
+  let getAttr = ffi.Library('./libsvgparse', {
+    'getAttributesRect': ['string', ['string', 'string']]
+  });
+  let attrs = getAttr.getAttributesRect("./uploads/" + req.query.fileName, req.query.string);
+  res.send({
+    attrs: attrs
+  });
+});
+
+app.get('/JSONtoAttrsCirc', (req, res) => {
+  let getAttr = ffi.Library('./libsvgparse', {
+    'getAttributesCirc': ['string', ['string', 'string']]
+  });
+  let attrs = getAttr.getAttributesCirc("./uploads/" + req.query.fileName, req.query.string);
+  res.send({
+    attrs: attrs
+  });
+});
+
+app.get('/JSONtoAttrsPath', (req, res) => {
+  let getAttr = ffi.Library('./libsvgparse', {
+    'getAttributesPath': ['string', ['string', 'string']]
+  });
+  let attrs = getAttr.getAttributesPath("./uploads/" + req.query.fileName, req.query.string);
+  res.send({
+    attrs: attrs
+  });
+});
+
+app.get('/JSONtoAttrsGroup', (req, res) => {
+  let getAttr = ffi.Library('./libsvgparse', {
+    'getAttributesGroup': ['string', ['string', 'string']]
+  });
+  let attrs = getAttr.getAttributesGroup("./uploads/" + req.query.fileName, req.query.string);
+  res.send({
+    attrs: attrs
   });
 });
 

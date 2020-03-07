@@ -2195,3 +2195,88 @@ char* getGroupsJSON(char* file) {
     deleteSVGimage(img);
     return groups;
 }
+
+//Will get the attributes in the corresponding Shape
+static char *getAttributesJSON(List* list, char type, char* JSONString) {
+    char *string = NULL;
+
+    ListIterator itr = createIterator(list);
+    void *node = nextElement(&itr);
+
+    while (node != NULL)
+    {
+        char *str = NULL;
+        Rectangle *r = NULL;
+        Circle *c = NULL;
+        Path *p = NULL;
+        Group *g = NULL;
+        if (type == 'r')
+        {
+            r = (Rectangle*) node;
+            str = rectToJSON((const Rectangle*)r);
+        } else if (type == 'c') {
+            c = (Circle*) node;
+            str = circleToJSON((const Circle*)c);
+        }
+        else if (type == 'p') {
+            p = (Path *) node;
+            str = pathToJSON((const Path*)p);
+        } else {
+            g = (Group *) node;
+            str = groupToJSON((const Group*)g);
+        }
+
+        if (strcmp(str, JSONString) == 0) {
+            if (type == 'r') {
+                string = attrListToJSON(r->otherAttributes);
+            } else if (type == 'c') {
+                string = attrListToJSON(c->otherAttributes);
+            } else if (type == 'p') {
+                string = attrListToJSON(p->otherAttributes);
+            } else if (type == 'g') {
+                string = attrListToJSON(g->otherAttributes);
+            }
+            return string;
+        }
+
+        free(str);
+        node = nextElement(&itr);
+    }
+    return nullReturnValueJSON("[]");
+}
+
+char* getAttributesRect(char* fileName, char* JSONString) {
+    SVGimage* img = createValidSVGimage(fileName, "svg.xsd");
+
+    char *attrJSON = getAttributesJSON(img->rectangles, 'r', JSONString);
+
+    deleteSVGimage(img);
+    return attrJSON;
+}
+
+char* getAttributesCirc(char* fileName, char* JSONString) {
+    SVGimage *img = createValidSVGimage(fileName, "svg.xsd");
+
+    char *attrJSON = getAttributesJSON(img->circles, 'c', JSONString);
+
+    deleteSVGimage(img);
+    return attrJSON;
+}
+
+char *getAttributesPath(char *fileName, char *JSONString){
+    SVGimage *img = createValidSVGimage(fileName, "svg.xsd");
+
+    char *attrJSON = getAttributesJSON(img->paths, 'p', JSONString);
+
+    deleteSVGimage(img);
+    return attrJSON;
+}
+
+char* getAttributesGroup(char* fileName, char* JSONString) {
+    SVGimage *img = createValidSVGimage(fileName, "svg.xsd");
+
+    char *attrJSON = getAttributesJSON(img->groups, 'g', JSONString);
+
+    deleteSVGimage(img);
+    return attrJSON;
+}
