@@ -13,6 +13,7 @@
 
 #define MAX_LENGTH 256
 #define TABLE_LENGTH 52
+#define maxmax(x,y) x>y?x:y
 
 char* getInput();
 char loopIndexToChar(int i);
@@ -32,10 +33,10 @@ int getResultTableBoyer(char* kString, char* userInput) {
     int len = strlen(userInput);
 
     for (int i = len - strlen(kString); i >= 0; i--) {
-        printf("comparing: (%s) & (%s) {w/ len = %ld}\n", kString, userInput + i, strlen(kString));
+        // printf("comparing: (%s) & (%s) {w/ len = %ld}\n", kString, userInput + i, strlen(kString));
         if (strncmp(kString, userInput + i, strlen(kString)) == 0) {
             if (len - i - strlen(kString) != 0) {
-                printf("returning: %d - %d - %ld = %ld\n", len, i ,strlen(kString), len - i - strlen(kString));
+                // printf("returning: %d - %d - %ld = %ld\n", len, i ,strlen(kString), len - i - strlen(kString));
                 return len - i - strlen(kString);
             }
         }
@@ -43,11 +44,12 @@ int getResultTableBoyer(char* kString, char* userInput) {
     return -1;
 }
 
+//Check from left to right if the sub string is in the input and where
 int getSubResults(char* sub, char* input) {
     for (int i = 0; i < strlen(input) - strlen(sub); i++) {
-        printf("comparing %s & %s {w/ len = %ld}\n", sub, input + i, strlen(sub));
+        // printf("comparing %s & %s {w/ len = %ld}\n", sub, input + i, strlen(sub));
         if (strncmp(sub, input + i, strlen(sub)) == 0) {
-            printf("returning: %ld - %d - 1 = %ld\n", strlen(input),i,strlen(input) - i - 1);
+            // printf("returning: %ld - %d - 1 = %ld\n", strlen(input),i,strlen(input) - i - 1);
             return strlen(input) - i - strlen(sub);
         }
     }
@@ -59,24 +61,26 @@ int checkSubMatches(char* subString, char* input) {
     int cur = 0;
     int max = 0;
     char* sub = malloc(sizeof(char) * strlen(subString) + 1);
-    printf("CASE 2: args = (%s,%s)\n", subString, input);
+    // printf("CASE 2: args = (%s,%s)\n", subString, input);
     for (int i = strlen(subString) - 1; i >= 0; i--) {
         strcpy(sub, subString + i);
-        printf("passing args(%s, %s)\n", sub, input);
+        // printf("passing args(%s, %s)\n", sub, input);
         cur = getSubResults(sub, input);
         if (cur > max) {
             max = cur;
         }
     }
+    free(sub);
     if (max < strlen(input) && max > 0) {
-        printf("returning the max: %d\n",max);
+        // printf("returning the max: %d\n",max);
         return max;
     }
     //If case 2 failed, then notify to move length of string - 1.
-    printf("returning: %ld {len of string}\n", strlen(input) - 1);
+    // printf("returning: %ld {len of string}\n", strlen(input) - 1);
     return strlen(input) - 1;
 }
 
+//Will create a good suffix table needed for the algorithm
 int* createBoyerTable(char* input) {
     int len = strlen(input);
     char* string = malloc(sizeof(char) * 50);
@@ -85,7 +89,7 @@ int* createBoyerTable(char* input) {
     int* table = malloc(len * sizeof(char));
 
     for (int i = len - 1; i > 0; i--) {
-        printf("copying %s\n", input + i);
+        // printf("copying %s\n", input + i);
         strcpy(string, input + i);
         table[lenTemp] = getResultTableBoyer(string, input);
         //If case 1 failed. run case 2
@@ -99,15 +103,50 @@ int* createBoyerTable(char* input) {
     return table;
 }
 
+int checkSubLength(char* userInput, char* line, int index) {
+    int k = 0;
+    for (int i = strlen(userInput) - 1; i >= 0; i--) {
+        if (userInput[i] == line[index - strlen(userInput) + i + 1]) {
+            k++;
+        } else {
+            break;
+        }
+    }
+    return k;
+}
+
+//Will count all the matches in the algorithm
 unsigned int countBoyerMooreMatches(char* userInput, char* line, unsigned int* patternShifts) {
+    unsigned int count = 0;
+
     int* badSuffixTable = stringToTable(userInput);
     int* goodSuffix = createBoyerTable(userInput);
 
-    printBoyerTable(goodSuffix, strlen(userInput) - 1);
+    int inputLen = strlen(userInput);
+    // printBoyerTable(goodSuffix, strlen(userInput) - 1);
+
+    for (int i = inputLen - 1; i < strlen(line);) {
+        int k = checkSubLength(userInput, line, i);
+        if (k == inputLen) {
+            count++;
+            i++;
+        } else {
+            int offset1 = maxmax(badSuffixTable[intTableIndex(line[i - k])] - k, 1);
+            if (k == 0) {
+                i += offset1;
+            } else {
+                i += maxmax(offset1, goodSuffix[k - 1]);
+            }
+            //do shifting stuff.
+        }
+
+        (*patternShifts)++;
+    }
+
 
     freeTable(goodSuffix);
     freeTable(badSuffixTable);
-    return 0;
+    return count;
 }
 
 unsigned int BoyerMooreStringMatching(unsigned int* patternShifts) {
@@ -118,13 +157,13 @@ unsigned int BoyerMooreStringMatching(unsigned int* patternShifts) {
     char* line = malloc(sizeof(char) * MAX_LENGTH + 1);
 
     //Loop through the 44049 lines in the file, and check each line for matches with the user's input.
-    // for(int i = 0; i < 44049; i++) {
-    //     if (fgets(line, MAX_LENGTH, fp) == NULL) {
-    //         break;
-    //     }
-    //     matches += countBoyerMooreMatches(userInput, line, patternShifts);
-    // }
-    countBoyerMooreMatches(userInput, line, patternShifts);
+    for(int i = 0; i < 44049; i++) {
+        if (fgets(line, MAX_LENGTH, fp) == NULL) {
+            break;
+        }
+        matches += countBoyerMooreMatches(userInput, line, patternShifts);
+    }
+
 
     free(userInput);
     free(line);
