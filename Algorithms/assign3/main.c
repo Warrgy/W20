@@ -23,7 +23,7 @@ unsigned int globalArrayLength = 0;
 char* getInput() {
     char input[100];
     printf("Enter the string: ");
-    scanf("%s", input);
+    scanf(" %s ", input);
 
     char* alloc = malloc(sizeof(char) * strlen(input) + 1);
     strcpy(alloc, input);
@@ -85,7 +85,7 @@ char** parseInt() {
 int main(int argc, char *argv[]) {
 
     if (argc != 2) {
-        printf("Please do ./assign3 [algorithm]\n");
+        printf("Please do ./assign3 [algorithm({1.1,1.2,2.1,2.2,2.3})]\n");
         return -1;
     }
 
@@ -97,7 +97,6 @@ int main(int argc, char *argv[]) {
 
         //Run algorithm wanted.
         if (strcmp(argv[1],"1.1") == 0) {
-            printf("Not implemented yet.\n");
             Anagrams = BruteForceAnagram(arr, globalArrayLength, &numAnagrams);
         } else {
             Anagrams = PreSortAnagram(arr, globalArrayLength, &numAnagrams);
