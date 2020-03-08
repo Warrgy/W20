@@ -70,7 +70,7 @@ int checkSubMatches(char* subString, char* input) {
             max = cur;
         }
     }
-    free(sub);
+    // free(sub);
     if (max < strlen(input) && max > 0) {
         // printf("returning the max: %d\n",max);
         return max;
@@ -103,6 +103,7 @@ int* createBoyerTable(char* input) {
     return table;
 }
 
+//Will get the k length for the two strings. (i.e the length from right to left that match both strings)
 int checkSubLength(char* userInput, char* line, int index) {
     int k = 0;
     for (int i = strlen(userInput) - 1; i >= 0; i--) {
@@ -137,18 +138,17 @@ unsigned int countBoyerMooreMatches(char* userInput, char* line, unsigned int* p
             } else {
                 i += maxmax(offset1, goodSuffix[k - 1]);
             }
-            //do shifting stuff.
         }
 
         (*patternShifts)++;
     }
-
 
     freeTable(goodSuffix);
     freeTable(badSuffixTable);
     return count;
 }
 
+//Count all the matches using the boyer moore algorithm
 unsigned int BoyerMooreStringMatching(unsigned int* patternShifts) {
     unsigned int matches = 0;
 

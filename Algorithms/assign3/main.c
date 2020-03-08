@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include <time.h>
 
 char** BruteForceAnagram(char** array, unsigned int length, unsigned int* numAnagrams);
 char** PreSortAnagram(char** array, unsigned int len, unsigned int* numAnagrams);
@@ -23,7 +24,7 @@ unsigned int globalArrayLength = 0;
 char* getInput() {
     char input[100];
     printf("Enter the string: ");
-    scanf(" %s ", input);
+    scanf("%s", input);
 
     char* alloc = malloc(sizeof(char) * strlen(input) + 1);
     strcpy(alloc, input);
@@ -85,15 +86,19 @@ char** parseInt() {
 int main(int argc, char *argv[]) {
 
     if (argc != 2) {
-        printf("Please do ./assign3 [algorithm({1.1,1.2,2.1,2.2,2.3})]\n");
+        printf("Please do ./assign3 {1.1,1.2,2.1,2.2,2.3}\n");
         return -1;
     }
+
+    clock_t start;
 
     //Anagrams
     if (strcmp(argv[1],"1.1") == 0 || strcmp(argv[1],"1.2") == 0) {
         char** arr = parseInt();
         unsigned int numAnagrams = 0;
         char** Anagrams = NULL;
+
+        start = clock();
 
         //Run algorithm wanted.
         if (strcmp(argv[1],"1.1") == 0) {
@@ -114,13 +119,14 @@ int main(int argc, char *argv[]) {
         unsigned int matches = 0;
         unsigned int patternShifts = 0;
 
+        start = clock();
+
         //Run algorithm wanted.
         if (strcmp(argv[1], "2.1") == 0) {
             matches = bruteForceStringMatching(&patternShifts);
         } else if (strcmp(argv[1], "2.2") == 0) {
             matches = HorspoolStringMatching(&patternShifts);
         } else {
-            printf("Not implemented yet.\n");
             matches = BoyerMooreStringMatching(&patternShifts);
         }
 
@@ -131,6 +137,10 @@ int main(int argc, char *argv[]) {
         printf("Please enter one of the following next time: {1.1,1.2,2.1,2.2,2.3}\n");
         return -1;
     }
+
+    clock_t end = clock();
+    double totalTime = (double)(end-start) / CLOCKS_PER_SEC;
+    printf("\nAlgorithm time = %lfs\n", totalTime);
 
     return 0;
 }

@@ -80,39 +80,30 @@ unsigned int countHorspoolMatches(char* userInput, char* line, unsigned int* pat
 
     unsigned int inputLen = (strlen(userInput));
     unsigned int lenChecker = 0;
-    // printf("checking line: %s\n", line);
     for (int i = inputLen - 1; i < strlen(line); ) {
-                // printf("comparing [%c] & [%c] {i = %d}\t", userInput[inputLen - 1], line[i], i);
-
+        //calculate index for the current character you are comparing
         int index = intTableIndex(line[i]);
+        //check for equality
         if (userInput[inputLen - 1] == line[i]) {
-            if (table[index] == 0) {
-                //check the entire string.
-            } else {
-                //continue the loop{i +=} {patternShifts}
-            }
             lenChecker += table[index];
         } else {
             lenChecker = 0;
         }
-        // printf("lenchecker = %d, inputLen = %d\t", lenChecker, inputLen);
+        //Check if the two strings are equalivent
         if (lenChecker  == inputLen) {
-            // printf("{i = %d}checking for entire string equality...{[%s] & [%s] <- %ld}\n",i, userInput, line + i - strlen(userInput) + 1, strlen(userInput));
             if (strncmp(userInput, (line + i - strlen(userInput) + 1), strlen(userInput)) == 0) {
-                // printf("incrementing count.\n");
                 count++;
             }
         }
-        // printf("got index: %d\n", index);
+
+        //Shift the table over the correct amount
         if (index >= 0) {
-            // printf("incrementing by %d\n", table[index]);
             i += table[index];
         } else {
-            // printf("incrementing by default aamount\n");
             i += inputLen;
         }
+
         (*patternShifts)++;
-        
     }
 
     freeTable(table);

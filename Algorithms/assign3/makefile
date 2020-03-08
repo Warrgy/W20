@@ -1,6 +1,6 @@
 CC = gcc
 CFLAGS = -Wall -std=c11 -g -lm
-algorithm = 2.3
+algorithm = 2.2
 
 all: together
 
@@ -24,12 +24,6 @@ main: main.c
 
 23: P23.c
 	$(CC) $(CFLAGS) -c P23.c -o P23.o
-
-run: 
-	./assign3 $(algorithm)
-
-valgrind: 
-	valgrind --leak-check=full --leak-resolution=med --track-origins=yes --show-leak-kinds=all ./assign3 $(algorithm)
 
 clean:
 	rm -rf *.o assign3
