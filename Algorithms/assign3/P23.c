@@ -33,10 +33,8 @@ int getResultTableBoyer(char* kString, char* userInput) {
     int len = strlen(userInput);
 
     for (int i = len - strlen(kString); i >= 0; i--) {
-        // printf("comparing: (%s) & (%s) {w/ len = %ld}\n", kString, userInput + i, strlen(kString));
         if (strncmp(kString, userInput + i, strlen(kString)) == 0) {
             if (len - i - strlen(kString) != 0) {
-                // printf("returning: %d - %d - %ld = %ld\n", len, i ,strlen(kString), len - i - strlen(kString));
                 return len - i - strlen(kString);
             }
         }
@@ -47,9 +45,7 @@ int getResultTableBoyer(char* kString, char* userInput) {
 //Check from left to right if the sub string is in the input and where
 int getSubResults(char* sub, char* input) {
     for (int i = 0; i < strlen(input) - strlen(sub); i++) {
-        // printf("comparing %s & %s {w/ len = %ld}\n", sub, input + i, strlen(sub));
         if (strncmp(sub, input + i, strlen(sub)) == 0) {
-            // printf("returning: %ld - %d - 1 = %ld\n", strlen(input),i,strlen(input) - i - 1);
             return strlen(input) - i - strlen(sub);
         }
     }
@@ -61,10 +57,9 @@ int checkSubMatches(char* subString, char* input) {
     int cur = 0;
     int max = 0;
     char* sub = malloc(sizeof(char) * strlen(subString) + 1);
-    // printf("CASE 2: args = (%s,%s)\n", subString, input);
     for (int i = strlen(subString) - 1; i >= 0; i--) {
         strcpy(sub, subString + i);
-        // printf("passing args(%s, %s)\n", sub, input);
+
         cur = getSubResults(sub, input);
         if (cur > max) {
             max = cur;
@@ -72,11 +67,9 @@ int checkSubMatches(char* subString, char* input) {
     }
     // free(sub);
     if (max < strlen(input) && max > 0) {
-        // printf("returning the max: %d\n",max);
         return max;
     }
     //If case 2 failed, then notify to move length of string - 1.
-    // printf("returning: %ld {len of string}\n", strlen(input) - 1);
     return strlen(input) - 1;
 }
 
@@ -89,7 +82,6 @@ int* createBoyerTable(char* input) {
     int* table = malloc(len * sizeof(char));
 
     for (int i = len - 1; i > 0; i--) {
-        // printf("copying %s\n", input + i);
         strcpy(string, input + i);
         table[lenTemp] = getResultTableBoyer(string, input);
         //If case 1 failed. run case 2
@@ -124,7 +116,6 @@ unsigned int countBoyerMooreMatches(char* userInput, char* line, unsigned int* p
     int* goodSuffix = createBoyerTable(userInput);
 
     int inputLen = strlen(userInput);
-    // printBoyerTable(goodSuffix, strlen(userInput) - 1);
 
     for (int i = inputLen - 1; i < strlen(line);) {
         int k = checkSubLength(userInput, line, i);
