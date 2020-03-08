@@ -1,0 +1,14 @@
+
+	One Sample t-test
+
+data:  boneDensity$Density
+t = 62.726, df = 29, p-value < 2.2e-16
+alternative hypothesis: true mean is not equal to 0
+95 percent confidence interval:
+ 1.296276 1.383657
+sample estimates:
+mean of x 
+ 1.339967 
+
+We can be 95% sure that the true mean bone density of boys who
+participated in jodo lies between 1.296276 and 1.383657 g/cm^2.
