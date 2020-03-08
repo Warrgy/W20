@@ -193,6 +193,11 @@ function displayIndividualDetails(file) {
     while (rootAttr.hasChildNodes()) {
         rootAttr.removeChild(rootAttr.firstChild);
     }
+    let editAttr = document.getElementById('editAttribute');
+    while (editAttr.hasChildNodes()) {
+        editAttr.removeChild(editAttr.firstChild);
+    }
+    editAttr.style.border = "none";
     if (file == "") {
         return;
     }
@@ -329,6 +334,13 @@ function addComponentDetails(file, root) {
                     showAttributes(dataCur, file, "r");
                 };
                 attributes.appendChild(showAttr);
+                let editAttr = document.createElement("input");
+                editAttr.type = "button";
+                editAttr.value = "Edit";
+                editAttr.onclick = function () {
+                    editAttributes(dataCur, file, "r");
+                };
+                attributes.appendChild(editAttr);
 
                 main.append(name, dataCell, attributes);
                 root.appendChild(main);
@@ -369,6 +381,13 @@ function addComponentDetails(file, root) {
                     showAttributes(dataCur, file, "c");
                 };
                 attributes.appendChild(showAttr);
+                let editAttr = document.createElement("input");
+                editAttr.type = "button";
+                editAttr.value = "Edit";
+                editAttr.onclick = function () {
+                    editAttributes(dataCur, file, "c");
+                };
+                attributes.appendChild(editAttr);
 
                 main.append(name, dataCell, attributes);
                 root.appendChild(main);
@@ -409,6 +428,13 @@ function addComponentDetails(file, root) {
                     showAttributes(dataCur, file, "p");
                 };
                 attributes.appendChild(showAttr);
+                let editAttr = document.createElement("input");
+                editAttr.type = "button";
+                editAttr.value = "Edit";
+                editAttr.onclick = function () {
+                    editAttributes(dataCur, file, "p");
+                };
+                attributes.appendChild(editAttr);
 
                 main.append(name, dataCell, attributes);
                 root.appendChild(main);
@@ -449,6 +475,13 @@ function addComponentDetails(file, root) {
                     showAttributes(dataCur, file, "g");
                 };
                 attributes.appendChild(showAttr);
+                let editAttr = document.createElement("input");
+                editAttr.type = "button";
+                editAttr.value = "Edit";
+                editAttr.onclick = function () {
+                    editAttributes(dataCur, file, "g");
+                };
+                attributes.appendChild(editAttr);
 
                 main.append(name, dataCell, attributes);
                 root.appendChild(main);
@@ -465,7 +498,12 @@ function addComponentDetails(file, root) {
 
 //Display the list of all the attributes.
 function showAttributes(JSONString, fileName, type) {
-    let root = document.getElementById('attributeTable');
+    let root = document.getElementById('editAttribute');
+    while (root.hasChildNodes()) {
+        root.removeChild(root.firstChild);
+    }
+    root.style.border = "none";
+    root = document.getElementById('attributeTable');
     while (root.hasChildNodes()) {
         root.removeChild(root.firstChild);
     }
@@ -525,6 +563,110 @@ function showAttributes(JSONString, fileName, type) {
         fail: err => {
             console.log("Error occured in getting attributes: " + err);
             alert("Error occured in getting attributes: " + err);
+        }
+    });
+}
+
+function editAttributes(JSONString, fileName, type) {
+    let root = document.getElementById('attributeTable');
+    while (root.hasChildNodes()) {
+        root.removeChild(root.firstChild);
+    }
+    root = document.getElementById('editAttribute');
+    while (root.hasChildNodes()) {
+        root.removeChild(root.firstChild);
+    }
+
+    root.style.border = "solid black";
+    let text = document.createElement("h4");
+    text.innerHTML = "Enter the attribute name and value.";
+    root.appendChild(text);
+
+    let name = document.createElement("input");
+    name.type = "text";
+    name.placeholder = "Enter name of Attribute.";
+    root.appendChild(name);
+    let value = document.createElement("input");
+    value.type = "text";
+    value.placeholder = "Enter value of Attribute.";
+    root.appendChild(value);
+    let btn = document.createElement("input");
+    btn.type = "button";
+    btn.value = "Submit";
+    btn.onclick = function () { 
+        addAttribute({ name: name.value, value: value.value }, JSONString, fileName, type);
+        while (root.hasChildNodes()) {
+            root.removeChild(root.firstChild);
+        }
+        root.style.border = "none";
+    }
+    root.appendChild(btn);
+
+    console.log("Called editAttributes function.");
+}
+
+function getIndex(JSONString, file, type) {
+    let URL = 1;
+    if (type == "r") {
+        URL = '/getRects';
+    } else if (type == "c") {
+        URL = '/getCircs';
+    } else if (type == "p") {
+        URL = '/getPaths';
+    } else if (type == "g") {
+        URL = '/getGroups'
+    }
+    $.ajax({
+        type: "get",
+        dataType: "json",
+        url: URL,
+        data: {
+            fileName: file
+        },
+        success: data => {
+            let rects = JSON.parse(data);
+            let i = 0;
+            rects.forEach(elem => {
+                if (JSON.stringify(elem) === JSONString) {
+                    return i;
+                }
+                i++;
+            });
+            return -1;
+        },
+        fail: err => {
+            console.log("Error occured: " + err);
+            alert("Error occured: " + err);
+        }
+    });
+}
+
+function addAttribute(data, JSONString, fileName, type) {
+    let index = getIndex(JSONString, fileName, type);
+    console.log("adding attribute...\n");
+    console.log(data);
+     $.ajax({
+        type: "get",
+        dataType: "json",
+        url: '/addAttribute',
+        data: {
+            index: index,
+            data: data,
+            fileName: fileName,
+            type: type
+        },
+         success: data => {
+             console.log(data);
+             if (data.sent == true) {
+                 window.location.reload();
+                //  displayIndividualDetails(fileName);
+             } else {
+                 console.log("issue in adding that atttribute.\n");
+            }
+        },
+        fail: err => {
+            console.log("Error occured in adding attributes: " + err);
+            alert("Error occured in adding attributes: " + err);
         }
     });
 }

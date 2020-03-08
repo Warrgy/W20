@@ -2280,3 +2280,75 @@ char* getAttributesGroup(char* fileName, char* JSONString) {
     deleteSVGimage(img);
     return attrJSON;
 }
+
+// static int getCorrespondingShape(List* list, char* JSONString, char type) {
+//     int i = 0;
+//     ListIterator itr = createIterator(list);
+//     void *node = nextElement(&itr);
+
+//     while (node != NULL)
+//     {
+//         char* json = NULL;
+//         if (type == 'r') {
+//             Rectangle *r = (Rectangle *)node;
+//             json = rectToJSON(r);
+//         } else if (type == 'c') {
+//             Circle *c = (Circle *)node;
+//             json = circleToJSON(c);
+//         } else if (type == 'p') {
+//             Path *p = (Path *)node;
+//             json = pathToJSON(p);
+//         } else {
+//             Group *g = (Group *)node;
+//             json = groupToJSON(g);
+//         }
+//         printf("comparing: [%s] and [%s]\n", json, JSONString);
+//         if (strcmp(json, JSONString) == 0) {
+//             printf("returning index: %d\n", i);
+//             return i;
+//         }
+//         node = nextElement(&itr);
+//         i++;
+//     }
+//     return -1;
+// }
+
+bool addAttributeJSON(char* file, int index, char* type, char* name, char* value) {
+    SVGimage* img = createValidSVGimage(file, "svg.xsd");
+
+    elementType elemType = -1;
+
+    if (strcmp(type,"r") == 0) {
+        elemType = RECT;
+    } else if (strcmp(type, "c") == 0) {
+        elemType = CIRC;
+    } else if (strcmp(type, "p") == 0) {
+        elemType = PATH;
+    } else if (strcmp(type, "g") == 0) {
+        elemType = GROUP;
+    }
+
+    if (index < 0) {
+        return false;
+    }
+
+    Attribute *curAttr = malloc(sizeof(Attribute));
+    curAttr->name = malloc(strlen((char *)name) + 1);
+    curAttr->value = malloc(strlen((char *)value) + 1);
+    strcpy(curAttr->name, (char *)name);
+    strcpy(curAttr->value, (char *)value);
+
+    char *attrString = attributeToString(curAttr);
+    free(attrString);
+
+    setAttribute(img, elemType, index, curAttr);
+
+    bool res = false;
+
+    if (validateSVGimage(img, "svg.xsd")) {
+        res = writeSVGimage(img, file);
+    }
+
+    deleteSVGimage(img);
+    return res;
+}

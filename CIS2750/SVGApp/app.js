@@ -249,5 +249,15 @@ app.get('/JSONtoAttrsGroup', (req, res) => {
   });
 });
 
+app.get('/addAttribute', (req, res) => {
+  let addAttr = ffi.Library('./libsvgparse', {
+    'addAttributeJSON': ["bool", ['string', 'int', 'string', 'string', 'string'] ]
+  });
+  let result = addAttr.addAttributeJSON("./uploads/" + req.query.fileName, req.query.index, req.query.type, req.query.data.name, req.query.data.value);
+  res.send({
+    sent: result
+  });
+});
+
 app.listen(portNum);
 console.log('Running app at localhost: ' + portNum);
