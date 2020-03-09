@@ -2123,6 +2123,9 @@ char* descToJSON(SVGimage* img) {
 }
 
 char* getSVGJSON(char* file) {
+    if (file == NULL) {
+        return NULL;
+    }
     const SVGimage* img = createValidSVGimage(file, "svg.xsd");
 
     char* arr = SVGtoJSON(img);
@@ -2132,6 +2135,9 @@ char* getSVGJSON(char* file) {
 }
 
 bool checkIfValid(char* file) {
+    if (file == NULL) {
+        return false;
+    }
     SVGimage* img = createValidSVGimage(file, "svg.xsd");
     if (img == NULL) {
         deleteSVGimage(img);
@@ -2143,6 +2149,9 @@ bool checkIfValid(char* file) {
 }
 
 char* getTitleJSON(char* file) {
+    if (file == NULL) {
+        return NULL;
+    }
     SVGimage *img = createValidSVGimage(file, "svg.xsd");
     char *title = malloc(strlen(img->title) + 1);
     strcpy(title, img->title);
@@ -2152,6 +2161,9 @@ char* getTitleJSON(char* file) {
 }
 
 char* getDescJSON(char* file) {
+    if (file == NULL) {
+        return NULL;
+    }
     SVGimage* img = createValidSVGimage(file, "svg.xsd");
     char* description = malloc(strlen(img->description) + 1);
     strcpy(description, img->description);
@@ -2161,6 +2173,9 @@ char* getDescJSON(char* file) {
 }
 
 char* getRectsJSON(char* file) {
+    if (file == NULL) {
+        return NULL;
+    }
     SVGimage* img = createValidSVGimage(file, "svg.xsd");
 
     char *rects = rectListToJSON(img->rectangles);
@@ -2170,6 +2185,9 @@ char* getRectsJSON(char* file) {
 }
 
 char *getCircsJSON(char* file) {
+    if (file == NULL) {
+        return NULL;
+    }
     SVGimage *img = createValidSVGimage(file, "svg.xsd");
 
     char *circles = circListToJSON(img->circles);
@@ -2179,6 +2197,9 @@ char *getCircsJSON(char* file) {
 }
 
 char *getPathsJSON(char* file) {
+    if (file == NULL) {
+        return NULL;
+    }
     SVGimage *img = createValidSVGimage(file, "svg.xsd");
 
     char *paths = pathListToJSON(img->paths);
@@ -2188,6 +2209,9 @@ char *getPathsJSON(char* file) {
 }
 
 char* getGroupsJSON(char* file) {
+    if (file == NULL) {
+        return NULL;
+    }
     SVGimage *img = createValidSVGimage(file, "svg.xsd");
 
     char *groups = groupListToJSON(img->groups);
@@ -2198,6 +2222,10 @@ char* getGroupsJSON(char* file) {
 
 //Will get the attributes in the corresponding Shape
 static char *getAttributesJSON(List* list, char type, char* JSONString) {
+    if (list == NULL || JSONString == NULL) {
+        return NULL;
+    }
+    
     char *string = NULL;
 
     ListIterator itr = createIterator(list);
@@ -2246,6 +2274,9 @@ static char *getAttributesJSON(List* list, char type, char* JSONString) {
 }
 
 char* getAttributesRect(char* fileName, char* JSONString) {
+    if (fileName == NULL || JSONString == NULL) {
+        return NULL;
+    }
     SVGimage* img = createValidSVGimage(fileName, "svg.xsd");
 
     char *attrJSON = getAttributesJSON(img->rectangles, 'r', JSONString);
@@ -2255,6 +2286,9 @@ char* getAttributesRect(char* fileName, char* JSONString) {
 }
 
 char* getAttributesCirc(char* fileName, char* JSONString) {
+    if (fileName == NULL || JSONString == NULL) {
+        return NULL;
+    }
     SVGimage *img = createValidSVGimage(fileName, "svg.xsd");
 
     char *attrJSON = getAttributesJSON(img->circles, 'c', JSONString);
@@ -2264,6 +2298,9 @@ char* getAttributesCirc(char* fileName, char* JSONString) {
 }
 
 char *getAttributesPath(char *fileName, char *JSONString){
+    if (fileName == NULL || JSONString == NULL) {
+        return NULL;
+    }
     SVGimage *img = createValidSVGimage(fileName, "svg.xsd");
 
     char *attrJSON = getAttributesJSON(img->paths, 'p', JSONString);
@@ -2273,6 +2310,9 @@ char *getAttributesPath(char *fileName, char *JSONString){
 }
 
 char* getAttributesGroup(char* fileName, char* JSONString) {
+    if (fileName == NULL || JSONString == NULL) {
+        return NULL;
+    }
     SVGimage *img = createValidSVGimage(fileName, "svg.xsd");
 
     char *attrJSON = getAttributesJSON(img->groups, 'g', JSONString);
@@ -2314,6 +2354,9 @@ char* getAttributesGroup(char* fileName, char* JSONString) {
 // }
 
 bool addAttributeJSON(char* file, int index, char* type, char* name, char* value) {
+    if (file  == NULL || type == NULL || name == NULL || value == NULL) {
+        return false;
+    }
     SVGimage* img = createValidSVGimage(file, "svg.xsd");
 
     elementType elemType = -1;
@@ -2350,5 +2393,53 @@ bool addAttributeJSON(char* file, int index, char* type, char* name, char* value
     }
 
     deleteSVGimage(img);
+    return res;
+}
+
+bool editTitle(char* fileName, char* newTitle) {
+    if (fileName == NULL || newTitle == NULL) {
+        return false;
+    }
+    bool res = true;
+    SVGimage* img = createValidSVGimage(fileName, "svg.xsd");
+
+    const unsigned char* validTitle = checkLengthChar((const unsigned char*)newTitle);
+
+    if (strcpy(img->title, (char *)validTitle) == NULL) {
+        res = false;
+    }
+
+    if (validateSVGimage(img, "svg.xsd")) {
+        writeSVGimage(img, fileName);
+    } else {
+        res = false;
+    }
+
+    deleteSVGimage(img);
+    free((char*)validTitle);
+    return res;
+}
+
+bool editDescription(char* fileName, char* newDesc) {
+    if (fileName == NULL || newDesc == NULL) {
+        return false;
+    }
+    bool res = true;
+    SVGimage *img = createValidSVGimage(fileName, "svg.xsd");
+
+    const unsigned char* validDesc = checkLengthChar((const unsigned char*)newDesc);
+
+    if (strcpy(img->description, (char *)validDesc) == NULL) {
+        res = false;
+    }
+
+    if (validateSVGimage(img, "svg.xsd")) {
+        writeSVGimage(img, fileName);
+    } else {
+        res = false;
+    }
+
+    deleteSVGimage(img);
+    free((char*)validDesc);
     return res;
 }

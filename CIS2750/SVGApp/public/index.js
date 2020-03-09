@@ -251,6 +251,59 @@ function displayIndividualDetails(file) {
     addComponentDetails(file, root);
 }
 
+function editTitle(file, title) {
+    $.ajax({
+        type: "get",
+        dataType: "json",
+        url: '/editTitle',
+        data: {
+            fileName: file,
+            title: title
+        },
+        success: data => {
+            if (data.sent == true) {
+                window.location.reload();
+            } else {
+                console.log("Issue in editing the title.");
+            }
+        },
+        fail: err => {
+            console.log("Error occured in changing the title: " + err);
+            alert("Error occured in changing the title: " + err);
+        }
+    });
+}
+
+function getNewTitle(file) {
+    let attrRoot = document.getElementById('attributeTable');
+    while (attrRoot.hasChildNodes()) {
+        attrRoot.removeChild(attrRoot.firstChild);
+    }
+
+    let root = document.getElementById('editTitleorDescription');
+    root.style.border = "1px solid black";
+
+    let header = document.createElement("h4");
+    header.innerHTML = "Enter the new title.";
+    root.appendChild(header);
+
+    let value = document.createElement("input");
+    value.type = "text";
+    value.placeholder = "Enter new Title.";
+    root.appendChild(value);
+    let btn = document.createElement("input");
+    btn.type = "button";
+    btn.value = "Submit";
+    btn.onclick = function () {
+        while (root.hasChildNodes()) {
+            root.removeChild(root.firstChild);
+        }
+        root.style.border = "none";
+        editTitle(file, value.value);
+    }
+    root.appendChild(btn);
+}
+
 //Get the title of the svg file, then paste it in the cell
 function getTitle(file, titleCell) {
     $.ajax({
@@ -270,11 +323,72 @@ function getTitle(file, titleCell) {
                 console.log("Setting innerHTML for title to: " + emptyStr);
                 titleCell.innerHTML = emptyStr;
             }
-            titleCell.innerHTML = title.title
+            titleCell.innerHTML = title.title + "\t";
+            let btn = document.createElement("input");
+            btn.type = "button";
+            btn.value = "Edit";
+            btn.onclick = function () {
+                getNewTitle(file);
+            }
+            titleCell.append(btn);
         },
+        
         fail: err => {
             console.log("Error occured in getting the title: " + err);
             alert("Error occured in getting the title: " + err);
+        }
+    });
+}
+
+function getNewDescription(file) {
+    let attrRoot = document.getElementById('attributeTable');
+    while (attrRoot.hasChildNodes()) {
+        attrRoot.removeChild(attrRoot.firstChild);
+    }
+
+    let root = document.getElementById('editTitleorDescription');
+    root.style.border = "1px solid black";
+
+    let header = document.createElement("h4");
+    header.innerHTML = "Enter the new description.";
+    root.appendChild(header);
+
+    let value = document.createElement("input");
+    value.type = "text";
+    value.placeholder = "Enter new Description.";
+    root.appendChild(value);
+    let btn = document.createElement("input");
+    btn.type = "button";
+    btn.value = "Submit";
+    btn.onclick = function () {
+        while (root.hasChildNodes()) {
+            root.removeChild(root.firstChild);
+        }
+        root.style.border = "none";
+        editDescription(file, value.value);
+    }
+    root.appendChild(btn);
+}
+
+function editDescription(file, desc) {
+    $.ajax({
+        type: "get",
+        dataType: "json",
+        url: '/editDescription',
+        data: {
+            fileName: file,
+            description: desc
+        },
+        success: data => {
+            if (data.sent == true) {
+                window.location.reload();
+            } else {
+                console.log("Issue in editing the description.");
+            }
+        },
+        fail: err => {
+            console.log("Error occured in changing the description: " + err);
+            alert("Error occured in changing the description: " + err);
         }
     });
 }
@@ -296,7 +410,14 @@ function getDescription(file, descCell) {
                 console.log("displayingg no desc.\n");
                 descCell.innerHTML = "No desc.";
             }
-            descCell.innerHTML = desc.desc;
+            descCell.innerHTML = desc.desc + "\t";
+            let btn = document.createElement("input");
+            btn.type = "button";
+            btn.value = "Edit";
+            btn.onclick = function () {
+                getNewDescription(file);
+            }
+            descCell.append(btn);
         },
         fail: err => {
             console.log("Error occured in getting the title: " + err);
@@ -577,7 +698,7 @@ function editAttributes(JSONString, fileName, type) {
         root.removeChild(root.firstChild);
     }
 
-    root.style.border = "solid black";
+    root.style.border = "1px solid black";
     let text = document.createElement("h4");
     text.innerHTML = "Enter the attribute name and value.";
     root.appendChild(text);
@@ -667,6 +788,27 @@ function addAttribute(data, JSONString, fileName, type) {
         fail: err => {
             console.log("Error occured in adding attributes: " + err);
             alert("Error occured in adding attributes: " + err);
+        }
+    });
+}
+
+$('#uploadButton').click(function () {
+    $('<input type="file" multiple>').on('change', function () {
+        let myfiles = this.files; //save selected files to the array
+        uploadFiles(myfiles);
+    }).click();
+});
+
+function uploadFiles(files) {
+    $.ajax({
+        url: '/uploadFile',
+        type: "POST",
+        data: files,
+        success: function (result) {
+            // if all is well
+        },
+        fail: (res) => {
+            console.log("Failed to upload.");
         }
     });
 }

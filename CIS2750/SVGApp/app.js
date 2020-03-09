@@ -259,5 +259,29 @@ app.get('/addAttribute', (req, res) => {
   });
 });
 
+app.get('/editTitle', (req, res) => {
+  let edit = ffi.Library('./libsvgparse', {
+    'editTitle': ["bool", ['string', 'string']]
+  });
+  let result = edit.editTitle("./uploads/" + req.query.fileName, req.query.title);
+  res.send({
+    sent: result
+  });
+});
+
+app.get('/editDescription', (req, res) => {
+  let edit = ffi.Library('./libsvgparse', {
+    'editDescription': ["bool", ['string', 'string']]
+  });
+  let result = edit.editDescription("./uploads/" + req.query.fileName, req.query.description);
+  res.send({
+    sent: result
+  });
+});
+
+app.post('/uploadFile', (req, res) => {
+  console.log(req);
+});
+
 app.listen(portNum);
 console.log('Running app at localhost: ' + portNum);
