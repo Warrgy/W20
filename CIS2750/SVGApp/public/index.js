@@ -251,6 +251,66 @@ function displayIndividualDetails(file) {
     addComponentDetails(file, root);
 }
 
+function addShapeButton(file, root) {
+    let row = document.createElement("tr");
+    row.align = "center";
+    let data = document.createElement("td");
+    data.colSpan = "4";
+
+    for (let i = 0; i < 4; i++) {
+        let input = document.createElement("input");
+        input.type = "button";
+        input.padding = 1;
+        input.align = "center";
+        switch (i) {
+            case 0:
+                input.value = "Add Rectangle";
+                input.onclick = () => {
+                    addRectangle(file);
+                }
+                break;
+            case 1:
+                input.value = "Add Circle";
+                input.onclick = () => {
+                    addCircle(file);
+                }
+                break;
+            case 2:
+                input.value = "Add Path";
+                input.onclick = () => {
+                    addPath(file);
+                }
+                break;
+            case 3:
+                input.value = "Add Group";
+                input.onclick = () => {
+                    addGroup(file);
+                }
+                break;
+        }
+        data.append(input);
+    }
+
+    row.append(data);
+    root.appendChild(row);
+}
+
+function addRectangle(file) {
+    console.log("Clicked add rectangle.");
+}
+
+function addCircle(file) {
+    console.log("Clicked add circle.");
+}
+
+function addPath(file) {
+    console.log("Clicked add path.");
+}
+
+function addGroup(file) {
+    console.log("Clicked add group.");
+}
+
 function editTitle(file, title) {
     $.ajax({
         type: "get",
@@ -433,8 +493,8 @@ function getDescription(file, descCell) {
 }
 
 //List off all the rectangles, paths, circles, and groups that are in the svg file
-function addComponentDetails(file, root) {
-    $.ajax({
+async function addComponentDetails(file, root) {
+    await $.ajax({
         type: "get",
         dataType: "json",
         url: '/getRects',
@@ -481,7 +541,7 @@ function addComponentDetails(file, root) {
         }
     });
 
-    $.ajax({
+    await $.ajax({
         type: "get",
         dataType: "json",
         url: '/getCircs',
@@ -528,7 +588,7 @@ function addComponentDetails(file, root) {
         }
     });
 
-    $.ajax({
+    await $.ajax({
         type: "get",
         dataType: "json",
         url: '/getPaths',
@@ -575,7 +635,7 @@ function addComponentDetails(file, root) {
         }
     });
 
-    $.ajax({
+    await $.ajax({
         type: "get",
         dataType: "json",
         url: '/getGroups',
@@ -621,6 +681,9 @@ function addComponentDetails(file, root) {
             alert("Error occured in displaying details for paths: " + err);
         }
     });
+
+    //row[n] => For adding shapes.
+    addShapeButton(file, root);
 }
 
 //Display the list of all the attributes.
