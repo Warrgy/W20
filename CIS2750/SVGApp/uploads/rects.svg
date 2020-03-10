@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="5cm" height="4cm" version="1.1">
-  <title>This is the greatest title of all</title>
+  <title>my title</title>
   <desc>Lots of rectangles</desc>
-  <rect x="0.500000cm" y="0.500000cm" height="1.000000cm" width="2.000000cm" fill="green"/>
+  <rect x="0.500000cm" y="0.500000cm" height="1.000000cm" width="2.000000cm" fill=" red"/>
   <rect x="0.500000cm" y="2.000000cm" height="1.500000cm" width="1.000000cm"/>
   <rect x="3.000000cm" y="0.500000cm" height="2.000000cm" width="1.500000cm"/>
   <rect x="3.500000cm" y="3.000000cm" height="0.500000cm" width="1.000000cm"/>

@@ -2,23 +2,23 @@
 // Put all onload AJAX calls here, and event listeners
 $(document).ready(function() {
     // On page-load AJAX Example
-    $.ajax({
-        type: 'get',            //Request type
-        dataType: 'json',       //Data type - we will use JSON for almost everything 
-        url: '/getSVGJSON',   //The server endpoint we are connecting to
-        data: {
-            fileName: "./uploads/rects.svg"
-        },
-        success: function (data) {
+    // $.ajax({
+    //     type: 'get',            //Request type
+    //     dataType: 'json',       //Data type - we will use JSON for almost everything 
+    //     url: '/getSVGJSON',   //The server endpoint we are connecting to
+    //     data: {
+    //         fileName: "./uploads/rects.svg"
+    //     },
+    //     success: function (data) {
             
-        },
-        fail: function(error) {
-            // Non-200 return, do something with error
-            // $('#blah').html("On page load, received error from server");
-            alert(error)
-            console.log(error); 
-        }
-    });
+    //     },
+    //     fail: function(error) {
+    //         // Non-200 return, do something with error
+    //         // $('#blah').html("On page load, received error from server");
+    //         alert(error)
+    //         console.log(error); 
+    //     }
+    // });
 
     $.ajax({
         type: 'get',            //Request type
@@ -275,10 +275,7 @@ function editTitle(file, title) {
 }
 
 function getNewTitle(file) {
-    let attrRoot = document.getElementById('attributeTable');
-    while (attrRoot.hasChildNodes()) {
-        attrRoot.removeChild(attrRoot.firstChild);
-    }
+    removeExtraChildrenViaPage();
 
     let root = document.getElementById('editTitleorDescription');
     root.style.border = "1px solid black";
@@ -295,10 +292,7 @@ function getNewTitle(file) {
     btn.type = "button";
     btn.value = "Submit";
     btn.onclick = function () {
-        while (root.hasChildNodes()) {
-            root.removeChild(root.firstChild);
-        }
-        root.style.border = "none";
+        removeExtraChildrenViaPage();
         editTitle(file, value.value);
     }
     root.appendChild(btn);
@@ -340,11 +334,26 @@ function getTitle(file, titleCell) {
     });
 }
 
-function getNewDescription(file) {
-    let attrRoot = document.getElementById('attributeTable');
-    while (attrRoot.hasChildNodes()) {
-        attrRoot.removeChild(attrRoot.firstChild);
+function removeExtraChildrenViaPage() {
+    let attr = document.getElementById('attributeTable');
+    let editAttr = document.getElementById('editAttribute');
+    let titOrDesc = document.getElementById('editTitleorDescription');
+    while (attr.hasChildNodes()) {
+        attr.removeChild(attr.firstChild);
     }
+    attr.style.border = "none";
+    while (editAttr.hasChildNodes()) {
+        editAttr.removeChild(editAttr.firstChild);
+    }
+    editAttr.style.border = "none";
+    while (titOrDesc.hasChildNodes()) {
+        titOrDesc.removeChild(titOrDesc.firstChild);
+    }
+    titOrDesc.style.border = "none";
+}
+
+function getNewDescription(file) {
+    removeExtraChildrenViaPage();
 
     let root = document.getElementById('editTitleorDescription');
     root.style.border = "1px solid black";
@@ -361,10 +370,7 @@ function getNewDescription(file) {
     btn.type = "button";
     btn.value = "Submit";
     btn.onclick = function () {
-        while (root.hasChildNodes()) {
-            root.removeChild(root.firstChild);
-        }
-        root.style.border = "none";
+        removeExtraChildrenViaPage();
         editDescription(file, value.value);
     }
     root.appendChild(btn);
@@ -619,7 +625,12 @@ function addComponentDetails(file, root) {
 
 //Display the list of all the attributes.
 function showAttributes(JSONString, fileName, type) {
-    let root = document.getElementById('editAttribute');
+    let root = document.getElementById('editTitleorDescription');
+    while (root.hasChildNodes()) {
+        root.removeChild(root.firstChild);
+    }
+    root.style.border = "none";
+    root = document.getElementById('editAttribute');
     while (root.hasChildNodes()) {
         root.removeChild(root.firstChild);
     }
@@ -628,7 +639,7 @@ function showAttributes(JSONString, fileName, type) {
     while (root.hasChildNodes()) {
         root.removeChild(root.firstChild);
     }
-    let URl = '';
+    let URL = '';
     if (type === "r") {
         URL = '/JSONtoAttrsRect';
     } else if (type === "c") {
@@ -689,7 +700,12 @@ function showAttributes(JSONString, fileName, type) {
 }
 
 function editAttributes(JSONString, fileName, type) {
-    let root = document.getElementById('attributeTable');
+    let root = document.getElementById('editTitleorDescription');
+    while (root.hasChildNodes()) {
+        root.removeChild(root.firstChild);
+    }
+    root.style.border = "none";
+    root = document.getElementById('attributeTable');
     while (root.hasChildNodes()) {
         root.removeChild(root.firstChild);
     }
@@ -792,23 +808,3 @@ function addAttribute(data, JSONString, fileName, type) {
     });
 }
 
-$('#uploadButton').click(function () {
-    $('<input type="file" multiple>').on('change', function () {
-        let myfiles = this.files; //save selected files to the array
-        uploadFiles(myfiles);
-    }).click();
-});
-
-function uploadFiles(files) {
-    $.ajax({
-        url: '/uploadFile',
-        type: "POST",
-        data: files,
-        success: function (result) {
-            // if all is well
-        },
-        fail: (res) => {
-            console.log("Failed to upload.");
-        }
-    });
-}

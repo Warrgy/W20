@@ -19,7 +19,7 @@
 <body>
     <h3>SVG Image Viewer</h3>
     
-    <table id="fileDisplay">
+    <table class=scrolling id="fileDisplay">
         <tr>
             <th>Image (click to download)</th>
             <th>File name (click to download)</th>
@@ -30,9 +30,6 @@
             <th>Number of groups</th>
         </tr>
     </table>
-    <div id="uploadFile">
-    </div>
-
 
     <form class="dropDown" id="dropDownMenu">
         <p>Please select a file</p>
@@ -61,10 +58,13 @@
     </div>
 
     <hr>
-
-    <div id="uploadFile">
-        <input type="button" value="Upload file" id="uploadButton" onclick="uploadFile()">
-        
+    
+    <div style="border: 1px solid black">
+        <h4 align="center">Upload File</h4>
+        <form action="/upload" method="POST" enctype="multipart/form-data">
+            <input type="file" name="uploadFile">
+            <input type="submit" value="Upload">
+        </form>
     </div>
 
     <form ref='someform' id='someform'>

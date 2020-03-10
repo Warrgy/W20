@@ -40,10 +40,12 @@ app.get('/index.js',function(req,res){
 });
 
 //Respond to POST requests that upload files to uploads/ directory
-app.post('/upload', function(req, res) {
+app.post('/upload', function (req, res) {
+  console.log("inside the uploads function/");
   if(!req.files) {
     return res.status(400).send('No files were uploaded.');
   }
+  console.log(req.files);
  
   let uploadFile = req.files.uploadFile;
  
@@ -72,31 +74,7 @@ app.get('/uploads/:name', function(req , res){
 //******************** Your code goes here ******************** 
 
 app.use(express.json());
-
-
-app.post('/test', (req, res) => {
-  // console.log("req: " + req.body + "\tres: " + res.body);
-  // const test = res.json({
-  //   status: "success",
-  //   value: req.body
-  // });
-  // console.log(test.status);
-  console.log("Received from user: " + JSON.stringify(req.body));
-  const temp = {
-    status: "success",
-    chicken: "Chicken"
-  };
-  res.send(JSON.stringify(temp));
-  console.log('sending: ' + JSON.stringify(temp) + " to the client.\n");
-});
-
-//Sample endpoint
-app.get('/someendpoint', function(req , res){
-  let retStr = req.query.name1 + " " + req.query.name2;
-  res.send({
-    foo: retStr
-  });
-});
+app.use(fileUpload(),);
 
 app.get('/getSVGJSON', (req,res) => {
   let rects = ffi.Library('./libsvgparse', {
@@ -279,9 +257,6 @@ app.get('/editDescription', (req, res) => {
   });
 });
 
-app.post('/uploadFile', (req, res) => {
-  console.log(req);
-});
 
 app.listen(portNum);
 console.log('Running app at localhost: ' + portNum);
