@@ -18,9 +18,11 @@ table,th,td {
     align: center;
 } 
 .scrolling {
-    overflow-y:scroll;
-    height:500px;
     display:block;
+    overflow:scroll;
+    overflow:auto;
+    height:500px;
+    width: 900px;
 }
 table tr td img {
     height: 400;

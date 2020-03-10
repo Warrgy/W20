@@ -266,25 +266,25 @@ function addShapeButton(file, root) {
             case 0:
                 input.value = "Add Rectangle";
                 input.onclick = () => {
-                    addRectangle(file);
+                    addShape(file, "rect");
                 }
                 break;
             case 1:
                 input.value = "Add Circle";
                 input.onclick = () => {
-                    addCircle(file);
+                    addShape(file, "circ");
                 }
                 break;
             case 2:
                 input.value = "Add Path";
                 input.onclick = () => {
-                    addPath(file);
+                    addShape(file, "path");
                 }
                 break;
             case 3:
                 input.value = "Add Group";
                 input.onclick = () => {
-                    addGroup(file);
+                    addShape(file, "group");
                 }
                 break;
         }
@@ -295,20 +295,78 @@ function addShapeButton(file, root) {
     root.appendChild(row);
 }
 
-function addRectangle(file) {
-    console.log("Clicked add rectangle.");
+async function addShape(file, type) {
+    removeExtraChildrenViaPage();
+
+    if (type === "rect") {
+        createRectangle(file);
+    } else if (type === "circ") {
+        console.log("circles");
+    } else if (type === "path") {
+        console.log("paths");
+    } else if (type === "group") {
+        console.log("groups");
+    }
 }
 
-function addCircle(file) {
-    console.log("Clicked add circle.");
+function createRectangle(file) {
+    let root = document.getElementById('AddShape');
+
+    //Make rectangle header
+    let header = document.createElement('h4');
+    header.innerHTML = "Rectangle";
+    header.align = "center";
+    root.appendChild(header);
+
+    //x value
+    let x = document.createElement("input");
+    x.type = "text";
+    x.placeholder = "Enter x value";
+    root.appendChild(x);
+
+    //y value
+    let y = document.createElement("input");
+    y.type = "text";
+    y.placeholder = "Enter y value";
+    root.appendChild(y);
+
+    //width
+    let w = document.createElement("input");
+    w.type = "text";
+    w.placeholder = "Enter width";
+    root.appendChild(w);
+
+    //height
+    let h = document.createElement("input");
+    h.type = "text";
+    h.placeholder = "Enter height";
+    root.appendChild(h);
+
+    //units
+    let units = document.createElement("input");
+    units.type = "text";
+    units.placeholder = "Units";
+    root.appendChild(units);
+
+    //Button
+    let btn = document.createElement("input");
+    root.append(btn);
+    btn.type = "button";
+    btn.value = "Submit";
+    btn.onclick = () => {
+        addRectangle(file, JSON.stringify({
+            x: Number(x.value),
+            y: Number(y.value),
+            w: Number(w.value),
+            h: Number(h.value),
+            units: units.value
+        }));
+        removeExtraChildrenViaPage();
+    }
 }
 
-function addPath(file) {
-    console.log("Clicked add path.");
-}
-
-function addGroup(file) {
-    console.log("Clicked add group.");
+function addRectangle(file, JSONRect) {
+    console.log("the rectaangles you made is: " + JSONRect);
 }
 
 function editTitle(file, title) {
@@ -398,6 +456,7 @@ function removeExtraChildrenViaPage() {
     let attr = document.getElementById('attributeTable');
     let editAttr = document.getElementById('editAttribute');
     let titOrDesc = document.getElementById('editTitleorDescription');
+    let shape = document.getElementById('AddShape');
     while (attr.hasChildNodes()) {
         attr.removeChild(attr.firstChild);
     }
@@ -410,6 +469,9 @@ function removeExtraChildrenViaPage() {
         titOrDesc.removeChild(titOrDesc.firstChild);
     }
     titOrDesc.style.border = "none";
+    while (shape.hasChildNodes()) {
+        shape.removeChild(shape.firstChild);
+    }
 }
 
 function getNewDescription(file) {
