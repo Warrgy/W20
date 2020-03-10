@@ -29,6 +29,9 @@ table tr td img {
     width: 700;
     padding: 1;
 }
+input {
+    padding: 1;
+}
 button {
     border-color: black;
     color: darkslategrey;

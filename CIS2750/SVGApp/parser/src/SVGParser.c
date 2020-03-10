@@ -284,6 +284,9 @@ static void addGroupToList(xmlNode *node, List* groupList) {
 
 //This will go through the xml tree recursively and add the required information to the SVGimage struct.
 static SVGimage* convertXMLtoSVG(xmlNode* a_node, SVGimage* image) {
+    if (a_node == NULL || image == NULL) {
+        return NULL;
+    }
     xmlNode *cur_node = NULL;
 
     for (cur_node = a_node; cur_node != NULL; cur_node = cur_node->next) {
@@ -394,6 +397,10 @@ static SVGimage* initializeSVG(xmlNode *a_node) {
     image->circles = initializeList(&circleToString, &deleteCircle, &compareCircles);
     image->paths = initializeList(&pathToString, &deletePath, &comparePaths);
     image->groups = initializeList(&groupToString, &deleteGroup, &compareGroups);
+
+    if (a_node == NULL) {
+        return image;
+    }
 
     SVGimage *fullSVG = convertXMLtoSVG(a_node, image); 
 
@@ -1950,7 +1957,7 @@ Rectangle* JSONtoRect(const char* svgString) {
     char* y = malloc(20);
     char* w = malloc(20);
     char* h = malloc(20);
-    char* units = malloc(3);
+    char* units = malloc(20);
     
     int j = 0;
     //Iterate through the string
@@ -2039,7 +2046,7 @@ Circle* JSONtoCircle(const char* svgString) {
     char* cx = malloc(20);
     char* cy = malloc(20);
     char* r = malloc(20);
-    char* units = malloc(3);
+    char* units = malloc(20);
     
     int j = 0;
     //Iterate through the string
@@ -2446,6 +2453,7 @@ bool editTitle(char* fileName, char* newTitle) {
     return res;
 }
 
+//Will change the description of a svg file
 bool editDescription(char* fileName, char* newDesc) {
     if (fileName == NULL || newDesc == NULL) {
         return false;
@@ -2470,6 +2478,7 @@ bool editDescription(char* fileName, char* newDesc) {
     return res;
 }
 
+//Will add a certain shape to a file using its JSON string
 bool addJSONShape(char* file, char* JSONShape, char* type) {
     if(file == NULL || JSONShape == NULL || type == NULL) {
         return false;
@@ -2494,18 +2503,36 @@ bool addJSONShape(char* file, char* JSONShape, char* type) {
         if (p == NULL) {
             res = false;
         }
-        char* q = pathToString(p);
-        printf("%s\n", q);
-        free(q);
         addComponent(img, PATH, p);
-    } else if (strcmp(type, "group") == 0) {
-        printf("Not implemented yet.");
     } else {
         printf("Couldnt determine what type you want to add.\n");
     }
 
     if (validateSVGimage(img, "svg.xsd")) {
         writeSVGimage(img, file);
+    } else {
+        res = false;
+    }
+
+    deleteSVGimage(img);
+    return res;
+}
+
+//Will create a new SVG file from a JSON string
+bool newSVGFile(char* fileName, char* JSON) {
+    if (fileName == NULL || JSON == NULL) {
+        return false;
+    }
+    if (strncmp(fileName + (strlen(fileName) - 4), ".svg", 4) != 0) {
+        return false;
+    }
+
+    bool res = true;
+
+    SVGimage *img = JSONtoSVG(JSON);
+
+    if (validateSVGimage(img, "svg.xsd")) {
+        writeSVGimage(img, fileName);
     } else {
         res = false;
     }

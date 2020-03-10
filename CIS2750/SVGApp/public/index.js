@@ -257,7 +257,7 @@ function addShapeButton(file, root) {
     let data = document.createElement("td");
     data.colSpan = "4";
 
-    for (let i = 0; i < 4; i++) {
+    for (let i = 0; i < 3; i++) {
         let input = document.createElement("input");
         input.type = "button";
         input.padding = 1;
@@ -284,13 +284,6 @@ function addShapeButton(file, root) {
                     createPath(file);
                 }
                 break;
-            case 3:
-                input.value = "Add Group";
-                input.onclick = () => {
-                    removeExtraChildrenViaPage();
-                    createGroup(file);
-                }
-                break;
         }
         data.append(input);
     }
@@ -298,7 +291,6 @@ function addShapeButton(file, root) {
     row.append(data);
     root.appendChild(row);
 }
-
 function createPath(file) {
     let root = document.getElementById('AddShape');
 
@@ -341,7 +333,7 @@ function addPath(file, JSONPath) {
             if (data.sent == true) {
                 window.location.reload();
             } else {
-                console.log("Issue in adding the path.");
+                alert("Unable to add path.");
             }
         },
         fail: err => {
@@ -414,7 +406,7 @@ function addCircle(file, circJSON) {
             if (data.sent == true) {
                 window.location.reload();
             } else {
-                console.log("Issue in adding the circle.");
+                alert("Unable to add circle.");
             }
         },
         fail: err => {
@@ -494,7 +486,7 @@ function addRectangle(file, JSONRect) {
             if (data.sent == true) {
                 window.location.reload();
             } else {
-                console.log("Issue in adding the rectangle.");
+                alert("Unable to add rectangle.");
             }
         },
         fail: err => {
@@ -715,14 +707,14 @@ async function addComponentDetails(file, root) {
                 showAttr.type = "button";
                 showAttr.value = "Show";
                 showAttr.onclick = function () {
-                    showAttributes(dataCur, file, "r");
+                    showAttributes(dataCur, file, "r", data.rects[i - 1]);
                 };
                 attributes.appendChild(showAttr);
                 let editAttr = document.createElement("input");
                 editAttr.type = "button";
                 editAttr.value = "Edit";
                 editAttr.onclick = function () {
-                    editAttributes(dataCur, file, "r");
+                    editAttributes(dataCur, file, "r", data.rects);
                 };
                 attributes.appendChild(editAttr);
 
@@ -884,7 +876,7 @@ async function addComponentDetails(file, root) {
 }
 
 //Display the list of all the attributes.
-function showAttributes(JSONString, fileName, type) {
+function showAttributes(JSONString, fileName, type, idJSON) {
     let root = document.getElementById('editTitleorDescription');
     while (root.hasChildNodes()) {
         root.removeChild(root.firstChild);
@@ -909,12 +901,16 @@ function showAttributes(JSONString, fileName, type) {
     } else if (type === "g") {
         URL = '/JSOntoAttrsGroup';
     }
+    console.log("trying to get attributes for:");
+    console.log(JSONString);
+    console.log(idJSON);
     $.ajax({
         type: "get",
         dataType: "json",
         url: URL,
         data: {
             string: JSON.stringify(JSONString),
+            id: idJSON,
             fileName: fileName
         },
         success: data => {
@@ -1068,3 +1064,79 @@ function addAttribute(data, JSONString, fileName, type) {
     });
 }
 
+function displaySVGCreate() {
+    let createButton = document.getElementById('createSVGButton')
+    createButton.style.display = "none";
+
+    let root = document.getElementById('createSVG');
+
+    let form = document.createElement('form');
+    form.name = "createSVGFile";
+    form.padding = 2;
+
+    //file name
+    let name = document.createElement('input');
+    name.type = "text";
+    name.placeholder = "Enter name of file";
+    name.innerText = "File name: ";
+    form.appendChild(name);
+
+    //File title
+    let title = document.createElement('input');
+    title.type = "text";
+    title.placeholder = "Enter title";
+    form.appendChild(title);
+
+    //File description
+    let desc = document.createElement('input');
+    desc.type = "text";
+    desc.placeholder = "Enter Description";
+    form.appendChild(desc);
+
+    form.appendChild(document.createElement('br'), document.createElement('br'));
+
+
+    let btn = document.createElement('input');
+    btn.type = "button";
+    btn.value = "Submit";
+    btn.onclick = () => {
+        createFile({
+            fileName: name.value,
+            title: title.value,
+            desc: desc.value
+        });
+        createButton.style.display = "block";
+        while (root.hasChildNodes()) {
+            root.removeChild(root.firstChild);
+        }
+    }
+    form.appendChild(btn);
+
+    root.appendChild(form);
+}
+
+function createFile(SVGFile) {
+    $.ajax({
+        type: "get",
+        dataType: "json",
+        url: '/createSVGFile',
+        data: {
+            fileName: SVGFile.fileName,
+            args: JSON.stringify({
+                title: SVGFile.title,
+                descr: SVGFile.desc
+            })
+        },
+        success: data => {
+            if (data.sent == true) {
+                window.location.reload();
+            } else {
+                alert("issue in making svg file.\n");
+            }
+        },
+        fail: err => {
+            console.log("Error occured in making the svg file: " + err);
+            alert("Error occured in making the svg file: " + err);
+        }
+    });
+}

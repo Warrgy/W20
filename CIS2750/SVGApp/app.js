@@ -267,5 +267,15 @@ app.get('/addShape', (req, res) => {
   });
 });
 
+app.get('/createSVGFile', (req, res) => {
+  let create = ffi.Library('./libsvgparse', {
+    'newSVGFile': ['bool', ['string', 'string']]
+  });
+  let result = create.newSVGFile("./uploads/" + req.query.fileName, req.query.args);
+  res.send({
+    sent: result
+  });
+});
+
 app.listen(portNum);
 console.log('Running app at localhost: ' + portNum);
