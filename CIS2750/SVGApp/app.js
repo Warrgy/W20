@@ -257,6 +257,15 @@ app.get('/editDescription', (req, res) => {
   });
 });
 
+app.get('/addShape', (req, res) => {
+  let add = ffi.Library('./libsvgparse', {
+    'addJSONShape': ['bool', ['string', 'string', 'string']]
+  });
+  let result = add.addJSONShape("./uploads/" + req.query.fileName, req.query.shape, req.query.type);
+  res.send({
+    sent: result
+  });
+});
 
 app.listen(portNum);
 console.log('Running app at localhost: ' + portNum);

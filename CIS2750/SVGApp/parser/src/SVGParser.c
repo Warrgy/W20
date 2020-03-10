@@ -1910,10 +1910,13 @@ SVGimage* JSONtoSVG(const char* svgString) {
             //If done get data mode, then flip the lever. and swap the corresponding gotTitle and gotDescription
             if (c == '\"') {
                 lever = false;
-                if (!gotTitle)
+                if (!gotTitle) {
                     gotTitle = true;
-                else if (!gotDescription)
+                    (image->title)[j] = '\0';
+                } else if (!gotDescription) {
                     gotDescription = true;
+                    (image->description)[j] = '\0';
+                }
                 continue;
             }
             //Put char into current string 
@@ -1947,7 +1950,7 @@ Rectangle* JSONtoRect(const char* svgString) {
     char* y = malloc(20);
     char* w = malloc(20);
     char* h = malloc(20);
-    char* units = malloc(20);
+    char* units = malloc(3);
     
     int j = 0;
     //Iterate through the string
@@ -2002,6 +2005,7 @@ Rectangle* JSONtoRect(const char* svgString) {
         }
         j++;
     }
+    units[2] = '\0';
 
     r->x = atof(x);
     r->y = atof(y);
@@ -2035,7 +2039,7 @@ Circle* JSONtoCircle(const char* svgString) {
     char* cx = malloc(20);
     char* cy = malloc(20);
     char* r = malloc(20);
-    char* units = malloc(20);
+    char* units = malloc(3);
     
     int j = 0;
     //Iterate through the string
@@ -2086,6 +2090,7 @@ Circle* JSONtoCircle(const char* svgString) {
         }
         j++;
     }
+    units[2] = '\0';
 
     circ->cx = atof(cx);
     circ->cy = atof(cy);
@@ -2098,6 +2103,27 @@ Circle* JSONtoCircle(const char* svgString) {
     free(units);
 
     return circ;
+}
+
+Path* JSONtoPath(const char* svgString) {
+    if (svgString == NULL) {
+        return NULL;
+    }
+
+    Path *path = malloc(sizeof(Path));
+    path->otherAttributes = initializeList(&attributeToString, &deleteAttribute, &compareAttributes);
+
+    path->data = malloc(1);
+    strcpy(path->data, "");
+
+    int len = 0;
+    for (int i = 6; svgString[i] != '\"'; i++) {
+        path->data = realloc(path->data, sizeof(char) * (++len + 1));
+        (path->data)[len - 1] = svgString[i];
+    }
+    strcat(path->data, "");
+
+    return path;
 }
 
 char* titleToJSON(SVGimage* img) {
@@ -2441,5 +2467,49 @@ bool editDescription(char* fileName, char* newDesc) {
 
     deleteSVGimage(img);
     free((char*)validDesc);
+    return res;
+}
+
+bool addJSONShape(char* file, char* JSONShape, char* type) {
+    if(file == NULL || JSONShape == NULL || type == NULL) {
+        return false;
+    }
+    bool res = true;
+    SVGimage *img = createValidSVGimage(file, "svg.xsd");
+
+    if (strcmp(type, "rect") == 0) {
+        Rectangle *r = JSONtoRect(JSONShape);
+        if (r == NULL) {
+            res = false;
+        }
+        addComponent(img, RECT, r);
+    } else if (strcmp(type, "circ") == 0) {
+        Circle* c = JSONtoCircle(JSONShape);
+        if (c == NULL) {
+            res = false;
+        }
+        addComponent(img, CIRC, c);
+    } else if (strcmp(type, "path") == 0) {
+        Path* p = JSONtoPath(JSONShape);
+        if (p == NULL) {
+            res = false;
+        }
+        char* q = pathToString(p);
+        printf("%s\n", q);
+        free(q);
+        addComponent(img, PATH, p);
+    } else if (strcmp(type, "group") == 0) {
+        printf("Not implemented yet.");
+    } else {
+        printf("Couldnt determine what type you want to add.\n");
+    }
+
+    if (validateSVGimage(img, "svg.xsd")) {
+        writeSVGimage(img, file);
+    } else {
+        res = false;
+    }
+
+    deleteSVGimage(img);
     return res;
 }

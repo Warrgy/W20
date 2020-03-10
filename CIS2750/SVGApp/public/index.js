@@ -266,25 +266,29 @@ function addShapeButton(file, root) {
             case 0:
                 input.value = "Add Rectangle";
                 input.onclick = () => {
-                    addShape(file, "rect");
+                    removeExtraChildrenViaPage();
+                    createRectangle(file);
                 }
                 break;
             case 1:
                 input.value = "Add Circle";
                 input.onclick = () => {
-                    addShape(file, "circ");
+                    removeExtraChildrenViaPage();
+                    createCircle(file);
                 }
                 break;
             case 2:
                 input.value = "Add Path";
                 input.onclick = () => {
-                    addShape(file, "path");
+                    removeExtraChildrenViaPage();
+                    createPath(file);
                 }
                 break;
             case 3:
                 input.value = "Add Group";
                 input.onclick = () => {
-                    addShape(file, "group");
+                    removeExtraChildrenViaPage();
+                    createGroup(file);
                 }
                 break;
         }
@@ -295,18 +299,129 @@ function addShapeButton(file, root) {
     root.appendChild(row);
 }
 
-async function addShape(file, type) {
-    removeExtraChildrenViaPage();
+function createPath(file) {
+    let root = document.getElementById('AddShape');
 
-    if (type === "rect") {
-        createRectangle(file);
-    } else if (type === "circ") {
-        console.log("circles");
-    } else if (type === "path") {
-        console.log("paths");
-    } else if (type === "group") {
-        console.log("groups");
+    //Make circle header
+    let header = document.createElement('h4');
+    header.innerHTML = "Path";
+    header.align = "center";
+    root.appendChild(header);
+
+    //cx value
+    let d = document.createElement("input");
+    d.type = "text";
+    d.placeholder = "Enter data value";
+    root.appendChild(d);
+
+    //Button
+    let btn = document.createElement("input");
+    root.append(btn);
+    btn.type = "button";
+    btn.value = "Submit";
+    btn.onclick = () => {
+        addPath(file, JSON.stringify({
+            d: d.value
+        }));
+        removeExtraChildrenViaPage();
     }
+}
+
+function addPath(file, JSONPath) {
+    $.ajax({
+        type: "get",
+        dataType: "json",
+        url: '/addShape',
+        data: {
+            fileName: file,
+            shape: JSONPath,
+            type: "path"
+        },
+        success: data => {
+            if (data.sent == true) {
+                window.location.reload();
+            } else {
+                console.log("Issue in adding the path.");
+            }
+        },
+        fail: err => {
+            console.log("Error occured in adding the path: " + err);
+            alert("Error occured in adding the path: " + err);
+        }
+    });
+}
+
+function createCircle(file) {
+    let root = document.getElementById('AddShape');
+
+    //Make circle header
+    let header = document.createElement('h4');
+    header.innerHTML = "Circle";
+    header.align = "center";
+    root.appendChild(header);
+
+    //cx value
+    let cx = document.createElement("input");
+    cx.type = "text";
+    cx.placeholder = "Enter cx value";
+    root.appendChild(cx);
+
+    //y value
+    let cy = document.createElement("input");
+    cy.type = "text";
+    cy.placeholder = "Enter cy value";
+    root.appendChild(cy);
+
+    //y value
+    let r = document.createElement("input");
+    r.type = "text";
+    r.placeholder = "Enter r value";
+    root.appendChild(r);
+
+    //units
+    let units = document.createElement("input");
+    units.type = "text";
+    units.placeholder = "Units";
+    root.appendChild(units);
+
+    //Button
+    let btn = document.createElement("input");
+    root.append(btn);
+    btn.type = "button";
+    btn.value = "Submit";
+    btn.onclick = () => {
+        addCircle(file, JSON.stringify({
+            cx: Number(cx.value),
+            cy: Number(cy.value),
+            r: Number(r.value),
+            units: units.value
+        }));
+        removeExtraChildrenViaPage();
+    }
+}
+
+function addCircle(file, circJSON) {
+    $.ajax({
+        type: "get",
+        dataType: "json",
+        url: '/addShape',
+        data: {
+            fileName: file,
+            shape: circJSON,
+            type: "circ"
+        },
+        success: data => {
+            if (data.sent == true) {
+                window.location.reload();
+            } else {
+                console.log("Issue in adding the circle.");
+            }
+        },
+        fail: err => {
+            console.log("Error occured in adding the circle: " + err);
+            alert("Error occured in adding the circle: " + err);
+        }
+    });
 }
 
 function createRectangle(file) {
@@ -366,7 +481,27 @@ function createRectangle(file) {
 }
 
 function addRectangle(file, JSONRect) {
-    console.log("the rectaangles you made is: " + JSONRect);
+    $.ajax({
+        type: "get",
+        dataType: "json",
+        url: '/addShape',
+        data: {
+            fileName: file,
+            shape: JSONRect,
+            type: "rect"
+        },
+        success: data => {
+            if (data.sent == true) {
+                window.location.reload();
+            } else {
+                console.log("Issue in adding the rectangle.");
+            }
+        },
+        fail: err => {
+            console.log("Error occured in adding the rectangle: " + err);
+            alert("Error occured in adding the rectangle: " + err);
+        }
+    });
 }
 
 function editTitle(file, title) {
