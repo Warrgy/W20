@@ -1,25 +1,6 @@
 
 // Put all onload AJAX calls here, and event listeners
-$(document).ready(function() {
-    // On page-load AJAX Example
-    // $.ajax({
-    //     type: 'get',            //Request type
-    //     dataType: 'json',       //Data type - we will use JSON for almost everything 
-    //     url: '/getSVGJSON',   //The server endpoint we are connecting to
-    //     data: {
-    //         fileName: "./uploads/rects.svg"
-    //     },
-    //     success: function (data) {
-            
-    //     },
-    //     fail: function(error) {
-    //         // Non-200 return, do something with error
-    //         // $('#blah').html("On page load, received error from server");
-    //         alert(error)
-    //         console.log(error); 
-    //     }
-    // });
-
+$(document).ready(function () {
     $.ajax({
         type: 'get',            //Request type
         dataType: 'json',       //Data type - we will use JSON for almost everything 
@@ -29,39 +10,30 @@ $(document).ready(function() {
             name2: "Value 2"
         },
         success: function (data) {
-            $('#blah').html("got from server: " + data);
+            if (data.length == 0) {
+                let noFiles = document.createElement("text");
+                noFiles.innerHTML = "No Files.";
+                document.getElementById('fileDisplay').appendChild(noFiles);
+            } else if (data.length >= 5) {
+                document.getElementById('fileDisplay').className = "scrolling";
+            }
             data.forEach(elem => {
                 let test = alterData(elem);
                 console.log("received: " + test);
             });
 
         },
-        fail: function(error) {
+        fail: function (error) {
             // Non-200 return, do something with error
             // $('#blah').html("On page load, received error from server");
-            console.log(error); 
+            console.log(error);
             alert(error)
         }
     });
-
     dropDown();
-
-    // Event listener form example , we can use this instead explicitly listening for events
-    // No redirects if possible
-    $('#someform').submit(function(e){
-        $('#chicken').html("Form has data: "+$('#entryBox').val());
-        e.preventDefault();
-        //Pass data to the Ajax call, so it gets passed to the server
-        $.ajax({
-            //Create an object for connecting to another waypoint
-        });
-    });
 });
 
 function alterData(fileName) {
-    let data = {
-        file: fileName
-    }
     $.ajax({
         type: "get",
         dataType: "json",
@@ -150,7 +122,7 @@ function dropDown() {
         type: 'get',            //Request type
         dataType: 'json',       //Data type - we will use JSON for almost everything 
         url: '/returnValidSVGFiles',   //The server endpoint we are connecting to
-        
+
         success: function (data) {
             let root = document.getElementById('files');
             let files = data.validFiles;
@@ -257,7 +229,7 @@ function addShapeButton(file, root) {
     let data = document.createElement("td");
     data.colSpan = "4";
 
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < 6; i++) {
         let input = document.createElement("input");
         input.type = "button";
         input.padding = 1;
@@ -284,6 +256,27 @@ function addShapeButton(file, root) {
                     createPath(file);
                 }
                 break;
+            case 3:
+                input.value = "Scale Rectangles";
+                input.onclick = () => {
+                    removeExtraChildrenViaPage();
+                    scaleFile(file, "r");
+                }
+                break;
+            case 4:
+                input.value = "Scale Circles";
+                input.onclick = () => {
+                    removeExtraChildrenViaPage();
+                    scaleFile(file, "c");
+                }
+                break;
+            case 5:
+                input.value = "Scale Image";
+                input.onclick = () => {
+                    removeExtraChildrenViaPage();
+                    scaleFile(file, "i");
+                }
+                break;
         }
         data.append(input);
     }
@@ -300,7 +293,7 @@ function createPath(file) {
     header.align = "center";
     root.appendChild(header);
 
-    //cx value
+    //data value
     let d = document.createElement("input");
     d.type = "text";
     d.placeholder = "Enter data value";
@@ -317,6 +310,71 @@ function createPath(file) {
         }));
         removeExtraChildrenViaPage();
     }
+}
+
+function scaleFile(file, type) {
+    let root = document.getElementById('AddShape');
+
+    //Header
+    let header = document.createElement('h4');
+    if (type === "r")
+        header.innerHTML = "Scale Rectangle";
+    else if (type == "c")
+        header.innerHTML = "Scale Circle";
+    else if (type == "i")
+        header.innerHTML = "Scale Image";
+    else
+        return;
+    header.align = "center";
+    root.appendChild(header);
+
+    //aligning and stuff
+    root.appendChild(document.createElement('br'));
+    let k = document.createElement('text');
+    k.innerHTML = "1:";
+    root.appendChild(k);
+
+    //Scaling
+    let scale = document.createElement('input');
+    scale.type = "text";
+    scale.placeholder = "Enter what you want to scale by";
+    root.appendChild(scale);
+
+    let btn = document.createElement('input');
+    btn.type = "button";
+    btn.value = "Submit";
+    btn.onclick = () => {
+        removeExtraChildrenViaPage();
+        scaleImage(file, Number(scale.value), type);
+    }
+    root.appendChild(btn);
+}
+
+function scaleImage(file, scaleFactor, type) {
+    if (scaleFactor == NaN) {
+        return;
+    }
+    $.ajax({
+        type: "get",
+        dataType: "json",
+        url: '/scaleImage',
+        data: {
+            fileName: file,
+            factor: scaleFactor,
+            type: type
+        },
+        success: data => {
+            if (data.sent == true) {
+                window.location.reload();
+            } else {
+                alert("Unable to scale image");
+            }
+        },
+        fail: err => {
+            console.log("Error occured in scaling image: " + err);
+            alert("Error occured in scaling imaage: " + err);
+        }
+    });
 }
 
 function addPath(file, JSONPath) {
@@ -509,7 +567,7 @@ function editTitle(file, title) {
             if (data.sent == true) {
                 window.location.reload();
             } else {
-                console.log("Issue in editing the title.");
+                alert("Issue in editing the title.");
             }
         },
         fail: err => {
@@ -571,7 +629,7 @@ function getTitle(file, titleCell) {
             }
             titleCell.append(btn);
         },
-        
+
         fail: err => {
             console.log("Error occured in getting the title: " + err);
             alert("Error occured in getting the title: " + err);
@@ -638,7 +696,7 @@ function editDescription(file, desc) {
             if (data.sent == true) {
                 window.location.reload();
             } else {
-                console.log("Issue in editing the description.");
+                alert("Issue in editing the description.");
             }
         },
         fail: err => {
@@ -691,9 +749,10 @@ async function addComponentDetails(file, root) {
             fileName: file
         },
         success: data => {
-            let rects = JSON.parse(data.rects);
+            let rects = JSON.parse(data.shape);
             let i = 1;
             rects.forEach(elem => {
+                let index = i - 1;
                 let main = document.createElement("tr");
                 let name = document.createElement("td");
                 name.innerText = "Rect " + i;
@@ -707,14 +766,14 @@ async function addComponentDetails(file, root) {
                 showAttr.type = "button";
                 showAttr.value = "Show";
                 showAttr.onclick = function () {
-                    showAttributes(dataCur, file, "r", data.rects[i - 1]);
+                    showAttributes(file, "r", index);
                 };
                 attributes.appendChild(showAttr);
                 let editAttr = document.createElement("input");
                 editAttr.type = "button";
                 editAttr.value = "Edit";
                 editAttr.onclick = function () {
-                    editAttributes(dataCur, file, "r", data.rects);
+                    editAttributes(dataCur, file, "r", index);
                 };
                 attributes.appendChild(editAttr);
 
@@ -738,9 +797,10 @@ async function addComponentDetails(file, root) {
             fileName: file
         },
         success: data => {
-            let circ = JSON.parse(data.circ);
+            let circ = JSON.parse(data.shape);
             let i = 1;
             circ.forEach(elem => {
+                let index = i - 1;
                 let main = document.createElement("tr");
                 let name = document.createElement("td");
                 name.innerText = "Circle " + i;
@@ -754,14 +814,14 @@ async function addComponentDetails(file, root) {
                 showAttr.type = "button";
                 showAttr.value = "Show";
                 showAttr.onclick = function () {
-                    showAttributes(dataCur, file, "c");
+                    showAttributes(file, "c", index);
                 };
                 attributes.appendChild(showAttr);
                 let editAttr = document.createElement("input");
                 editAttr.type = "button";
                 editAttr.value = "Edit";
                 editAttr.onclick = function () {
-                    editAttributes(dataCur, file, "c");
+                    editAttributes(dataCur, file, "c", index);
                 };
                 attributes.appendChild(editAttr);
 
@@ -785,9 +845,10 @@ async function addComponentDetails(file, root) {
             fileName: file
         },
         success: data => {
-            let paths = JSON.parse(data.paths);
+            let paths = JSON.parse(data.shape);
             let i = 1;
             paths.forEach(elem => {
+                let index = i - 1;
                 let main = document.createElement("tr");
                 let name = document.createElement("td");
                 name.innerText = "Path " + i;
@@ -801,14 +862,14 @@ async function addComponentDetails(file, root) {
                 showAttr.type = "button";
                 showAttr.value = "Show";
                 showAttr.onclick = function () {
-                    showAttributes(dataCur, file, "p");
+                    showAttributes(file, "p", index);
                 };
                 attributes.appendChild(showAttr);
                 let editAttr = document.createElement("input");
                 editAttr.type = "button";
                 editAttr.value = "Edit";
                 editAttr.onclick = function () {
-                    editAttributes(dataCur, file, "p");
+                    editAttributes(dataCur, file, "p", index);
                 };
                 attributes.appendChild(editAttr);
 
@@ -832,9 +893,10 @@ async function addComponentDetails(file, root) {
             fileName: file
         },
         success: data => {
-            let groups = JSON.parse(data.groups);
+            let groups = JSON.parse(data.shape);
             let i = 1;
             groups.forEach(elem => {
+                let index = i - 1;
                 let main = document.createElement("tr");
                 let name = document.createElement("td");
                 name.innerText = "Group " + i;
@@ -848,14 +910,14 @@ async function addComponentDetails(file, root) {
                 showAttr.type = "button";
                 showAttr.value = "Show";
                 showAttr.onclick = function () {
-                    showAttributes(dataCur, file, "g");
+                    showAttributes(file, "g", index);
                 };
                 attributes.appendChild(showAttr);
                 let editAttr = document.createElement("input");
                 editAttr.type = "button";
                 editAttr.value = "Edit";
                 editAttr.onclick = function () {
-                    editAttributes(dataCur, file, "g");
+                    editAttributes(dataCur, file, "g", index);
                 };
                 attributes.appendChild(editAttr);
 
@@ -876,7 +938,7 @@ async function addComponentDetails(file, root) {
 }
 
 //Display the list of all the attributes.
-function showAttributes(JSONString, fileName, type, idJSON) {
+function showAttributes(fileName, type, index) {
     let root = document.getElementById('editTitleorDescription');
     while (root.hasChildNodes()) {
         root.removeChild(root.firstChild);
@@ -891,7 +953,7 @@ function showAttributes(JSONString, fileName, type, idJSON) {
     while (root.hasChildNodes()) {
         root.removeChild(root.firstChild);
     }
-    let URL = '';
+
     if (type === "r") {
         URL = '/JSONtoAttrsRect';
     } else if (type === "c") {
@@ -899,22 +961,25 @@ function showAttributes(JSONString, fileName, type, idJSON) {
     } else if (type === "p") {
         URL = '/JSONtoAttrsPath';
     } else if (type === "g") {
-        URL = '/JSOntoAttrsGroup';
+        URL = '/JSONtoAttrsGroup';
+    } else {
+        return;
     }
-    console.log("trying to get attributes for:");
-    console.log(JSONString);
-    console.log(idJSON);
+
+    console.log("the index is " + index);
+
     $.ajax({
         type: "get",
         dataType: "json",
         url: URL,
         data: {
-            string: JSON.stringify(JSONString),
-            id: idJSON,
+            index: index,
             fileName: fileName
         },
         success: data => {
             let attributes = JSON.parse(data.attrs);
+            console.log("the attributes are:");
+            console.log(attributes);
             if (attributes.length > 0) {
                 let titleRow = document.createElement("tr");
                 let title = document.createElement("td");
@@ -955,7 +1020,7 @@ function showAttributes(JSONString, fileName, type, idJSON) {
     });
 }
 
-function editAttributes(JSONString, fileName, type) {
+function editAttributes(JSONString, fileName, type, index) {
     let root = document.getElementById('editTitleorDescription');
     while (root.hasChildNodes()) {
         root.removeChild(root.firstChild);
@@ -986,75 +1051,34 @@ function editAttributes(JSONString, fileName, type) {
     let btn = document.createElement("input");
     btn.type = "button";
     btn.value = "Submit";
-    btn.onclick = function () { 
-        addAttribute({ name: name.value, value: value.value }, JSONString, fileName, type);
+    btn.onclick = function () {
+        addAttribute({ name: name.value, value: value.value }, index, fileName, type);
         while (root.hasChildNodes()) {
             root.removeChild(root.firstChild);
         }
         root.style.border = "none";
     }
     root.appendChild(btn);
-
-    console.log("Called editAttributes function.");
 }
 
-function getIndex(JSONString, file, type) {
-    let URL = 1;
-    if (type == "r") {
-        URL = '/getRects';
-    } else if (type == "c") {
-        URL = '/getCircs';
-    } else if (type == "p") {
-        URL = '/getPaths';
-    } else if (type == "g") {
-        URL = '/getGroups'
-    }
+function addAttribute(dataAttr, index, fileName, type) {
+    console.log("index = " + index);
     $.ajax({
-        type: "get",
-        dataType: "json",
-        url: URL,
-        data: {
-            fileName: file
-        },
-        success: data => {
-            let rects = JSON.parse(data);
-            let i = 0;
-            rects.forEach(elem => {
-                if (JSON.stringify(elem) === JSONString) {
-                    return i;
-                }
-                i++;
-            });
-            return -1;
-        },
-        fail: err => {
-            console.log("Error occured: " + err);
-            alert("Error occured: " + err);
-        }
-    });
-}
-
-function addAttribute(data, JSONString, fileName, type) {
-    let index = getIndex(JSONString, fileName, type);
-    console.log("adding attribute...\n");
-    console.log(data);
-     $.ajax({
         type: "get",
         dataType: "json",
         url: '/addAttribute',
         data: {
             index: index,
-            data: data,
+            data: dataAttr,
             fileName: fileName,
             type: type
         },
-         success: data => {
-             console.log(data);
-             if (data.sent == true) {
-                 window.location.reload();
-                //  displayIndividualDetails(fileName);
-             } else {
-                 console.log("issue in adding that atttribute.\n");
+        success: data => {
+            console.log(data);
+            if (data.sent == true) {
+                window.location.reload();
+            } else {
+                alert("issue in adding that atttribute.\n");
             }
         },
         fail: err => {

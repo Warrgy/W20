@@ -1,13 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="5cm" height="4cm" version="1.1">
-  <title>my title</title>
-  <desc>Lots of rectangles</desc>
-  <rect x="0.500000cm" y="0.500000cm" height="1.000000cm" width="2.000000cm" fill="pink"/>
-  <rect x="0.500000cm" y="2.000000cm" height="1.500000cm" width="1.000000cm"/>
+  <title>There is so many shapes!!!</title>
+  <desc>rectangles, circles, and some paths</desc>
+  <rect x="0.500000cm" y="0.500000cm" height="1.000000cm" width="2.000000cm" fill="red"/>
+  <rect x="0.500000cm" y="2.000000cm" height="1.500000cm" width="1.000000cm" fill="purple"/>
   <rect x="3.000000cm" y="0.500000cm" height="2.000000cm" width="1.500000cm"/>
-  <rect x="3.500000cm" y="3.000000cm" height="0.500000cm" width="1.000000cm"/>
+  <rect x="3.500000cm" y="3.000000cm" height="0.500000cm" width="1.000000cm" fill="yellow"/>
   <rect x="0.010000cm" y="0.010000cm" height="3.980000cm" width="4.980000cm" fill=" none" stroke="blue" stroke-width=".02cm"/>
-  <rect x="15.000000cm" y="15.000000cm" height="30.000000cm" width="30.000000cm"/>
-  <circle cx="12.000000cm" cy="12.000000cm" r="12.000000cm"/>
-  <path d="m44.6 42.3c-8.1 5.7-17.1 5.6-25.2 0-1-.7-1.8.5-1.2 1.6 2.5 4 7.4 7.7 13.8 7.7s11.3-3.6 13.8-7.7c.6-1.1-.2-2.3-1.2-1.6"/>
+  <rect x="15.000000cm" y="15.000000cm" height="30.000000cm" width="30.000000cm" fill="green"/>
+  <rect x="10.000000cm" y="10.000000cm" height="13.000000cm" width="10.000000cm" fill="maroon"/>
+  <circle cx="12.000000cm" cy="12.000000cm" r="12.000000cm" fill="orange"/>
+  <circle cx="1.100000cm" cy="1.100000cm" r="3.000000cm" stroke="maroon" fill="none"/>
+  <path d="m44.6 42.3c-8.1 5.7-17.1 5.6-25.2 0-1-.7-1.8.5-1.2 1.6 2.5 4 7.4 7.7 13.8 7.7s11.3-3.6 13.8-7.7c.6-1.1-.2-2.3-1.2-1.6" fill="green"/>
 </svg>

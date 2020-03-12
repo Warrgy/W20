@@ -2112,6 +2112,7 @@ Circle* JSONtoCircle(const char* svgString) {
     return circ;
 }
 
+//Will convert a JSON string into a Path.
 Path* JSONtoPath(const char* svgString) {
     if (svgString == NULL) {
         return NULL;
@@ -2133,6 +2134,7 @@ Path* JSONtoPath(const char* svgString) {
     return path;
 }
 
+//Will get the JSON representation of the title in the svg file
 char* titleToJSON(SVGimage* img) {
     if (img == NULL) {
         return nullReturnValueJSON("{}");
@@ -2144,6 +2146,7 @@ char* titleToJSON(SVGimage* img) {
     return title;
 }
 
+//Will get the JSON representation of the description in the svg file
 char* descToJSON(SVGimage* img) {
     if (img == NULL) {
         return nullReturnValueJSON("{}");
@@ -2155,6 +2158,7 @@ char* descToJSON(SVGimage* img) {
     return desc;
 }
 
+//Will get the JSON representation of the SVG file
 char* getSVGJSON(char* file) {
     if (file == NULL) {
         return NULL;
@@ -2167,6 +2171,7 @@ char* getSVGJSON(char* file) {
     return arr;
 }
 
+//Will check if the file is a valid svg file
 bool checkIfValid(char* file) {
     if (file == NULL) {
         return false;
@@ -2181,6 +2186,7 @@ bool checkIfValid(char* file) {
     }
 }
 
+//Get the JSON representation of the title in the file
 char* getTitleJSON(char* file) {
     if (file == NULL) {
         return NULL;
@@ -2193,6 +2199,7 @@ char* getTitleJSON(char* file) {
     return title;
 }
 
+//Get the JSON representation of the description in the file
 char* getDescJSON(char* file) {
     if (file == NULL) {
         return NULL;
@@ -2205,6 +2212,7 @@ char* getDescJSON(char* file) {
     return description;
 }
 
+//Get the JSON representation of the rectangles in the file
 char* getRectsJSON(char* file) {
     if (file == NULL) {
         return NULL;
@@ -2217,6 +2225,7 @@ char* getRectsJSON(char* file) {
     return rects;
 }
 
+//Get the JSON representation of the circles in the file
 char *getCircsJSON(char* file) {
     if (file == NULL) {
         return NULL;
@@ -2229,6 +2238,7 @@ char *getCircsJSON(char* file) {
     return circles;
 }
 
+//Get the JSON representation of the paths in the file
 char *getPathsJSON(char* file) {
     if (file == NULL) {
         return NULL;
@@ -2241,6 +2251,7 @@ char *getPathsJSON(char* file) {
     return paths;
 }
 
+//Get the JSON representation of the groups in the file
 char* getGroupsJSON(char* file) {
     if (file == NULL) {
         return NULL;
@@ -2254,143 +2265,94 @@ char* getGroupsJSON(char* file) {
 }
 
 //Will get the attributes in the corresponding Shape
-static char *getAttributesJSON(List* list, char type, char* JSONString) {
-    if (list == NULL || JSONString == NULL) {
+static char* getAttributesJSON(List* list, int index, elementType type) {
+    if (list == NULL || index < 0 || type < 0 || type > 5) {
         return NULL;
     }
-    
-    char *string = NULL;
-
     ListIterator itr = createIterator(list);
     void *node = nextElement(&itr);
 
-    while (node != NULL)
-    {
-        char *str = NULL;
-        Rectangle *r = NULL;
-        Circle *c = NULL;
-        Path *p = NULL;
-        Group *g = NULL;
-        if (type == 'r')
-        {
-            r = (Rectangle*) node;
-            str = rectToJSON((const Rectangle*)r);
-        } else if (type == 'c') {
-            c = (Circle*) node;
-            str = circleToJSON((const Circle*)c);
+    for (int i = 0; node != NULL; i++) {
+        if (i == index) {
+            if (type == RECT) {
+                Rectangle *r = (Rectangle*) node;
+                return attrListToJSON(r->otherAttributes);
+            } else if (type == CIRC) {
+                Circle *c = (Circle*)node;
+                return attrListToJSON(c->otherAttributes);
+            } else if (type == PATH) {
+                Path *p = (Path*) node;
+                return attrListToJSON(p->otherAttributes);
+            } else if (type == GROUP) {
+                Group *g = (Group *)node;
+                return attrListToJSON(g->otherAttributes);
+            } 
         }
-        else if (type == 'p') {
-            p = (Path *) node;
-            str = pathToJSON((const Path*)p);
-        } else {
-            g = (Group *) node;
-            str = groupToJSON((const Group*)g);
-        }
-
-        if (strcmp(str, JSONString) == 0) {
-            if (type == 'r') {
-                string = attrListToJSON(r->otherAttributes);
-            } else if (type == 'c') {
-                string = attrListToJSON(c->otherAttributes);
-            } else if (type == 'p') {
-                string = attrListToJSON(p->otherAttributes);
-            } else if (type == 'g') {
-                string = attrListToJSON(g->otherAttributes);
-            }
-            return string;
-        }
-
-        free(str);
         node = nextElement(&itr);
     }
-    return nullReturnValueJSON("[]");
+    return NULL;
 }
 
-char* getAttributesRect(char* fileName, char* JSONString) {
-    if (fileName == NULL || JSONString == NULL) {
+//Get the JSON representation of the attributes for a specific rectangle in the file
+char* getAttributesRect(char* fileName, int index) {
+    if (fileName == NULL) {
         return NULL;
     }
     SVGimage* img = createValidSVGimage(fileName, "svg.xsd");
 
-    char *attrJSON = getAttributesJSON(img->rectangles, 'r', JSONString);
+    char *attrJSON = getAttributesJSON(img->rectangles, index, RECT);
 
     deleteSVGimage(img);
     return attrJSON;
 }
 
-char* getAttributesCirc(char* fileName, char* JSONString) {
-    if (fileName == NULL || JSONString == NULL) {
+//Get the JSON representation of the attributes for a specific circle in the file
+char* getAttributesCirc(char* fileName, int index) {
+    if (fileName == NULL) {
         return NULL;
     }
     SVGimage *img = createValidSVGimage(fileName, "svg.xsd");
 
-    char *attrJSON = getAttributesJSON(img->circles, 'c', JSONString);
+    char *attrJSON = getAttributesJSON(img->circles, index, CIRC);
 
     deleteSVGimage(img);
     return attrJSON;
 }
 
-char *getAttributesPath(char *fileName, char *JSONString){
-    if (fileName == NULL || JSONString == NULL) {
+//Get the JSON representation of the attributes for a specific path in the file
+char *getAttributesPath(char *fileName, int index){
+    if (fileName == NULL) {
         return NULL;
     }
     SVGimage *img = createValidSVGimage(fileName, "svg.xsd");
 
-    char *attrJSON = getAttributesJSON(img->paths, 'p', JSONString);
+    char *attrJSON = getAttributesJSON(img->paths, index, PATH);
 
     deleteSVGimage(img);
     return attrJSON;
 }
 
-char* getAttributesGroup(char* fileName, char* JSONString) {
-    if (fileName == NULL || JSONString == NULL) {
+//Get the JSON representation of the attributes for a specific group in the file
+char* getAttributesGroup(char* fileName, int index) {
+    if (fileName == NULL) {
         return NULL;
     }
     SVGimage *img = createValidSVGimage(fileName, "svg.xsd");
 
-    char *attrJSON = getAttributesJSON(img->groups, 'g', JSONString);
+    char *attrJSON = getAttributesJSON(img->groups, index, GROUP);
 
     deleteSVGimage(img);
     return attrJSON;
 }
 
-// static int getCorrespondingShape(List* list, char* JSONString, char type) {
-//     int i = 0;
-//     ListIterator itr = createIterator(list);
-//     void *node = nextElement(&itr);
-
-//     while (node != NULL)
-//     {
-//         char* json = NULL;
-//         if (type == 'r') {
-//             Rectangle *r = (Rectangle *)node;
-//             json = rectToJSON(r);
-//         } else if (type == 'c') {
-//             Circle *c = (Circle *)node;
-//             json = circleToJSON(c);
-//         } else if (type == 'p') {
-//             Path *p = (Path *)node;
-//             json = pathToJSON(p);
-//         } else {
-//             Group *g = (Group *)node;
-//             json = groupToJSON(g);
-//         }
-//         printf("comparing: [%s] and [%s]\n", json, JSONString);
-//         if (strcmp(json, JSONString) == 0) {
-//             printf("returning index: %d\n", i);
-//             return i;
-//         }
-//         node = nextElement(&itr);
-//         i++;
-//     }
-//     return -1;
-// }
-
+//Will edit the attribute of the specified type to the attribute name and value
+//Will only add/edit if valid, via the setAttribute function
 bool addAttributeJSON(char* file, int index, char* type, char* name, char* value) {
     if (file  == NULL || type == NULL || name == NULL || value == NULL) {
         return false;
     }
-    SVGimage* img = createValidSVGimage(file, "svg.xsd");
+
+    SVGimage *img = createValidSVGimage(file, "svg.xsd");
 
     elementType elemType = -1;
 
@@ -2429,6 +2391,7 @@ bool addAttributeJSON(char* file, int index, char* type, char* name, char* value
     return res;
 }
 
+//Will change the title of the svg file
 bool editTitle(char* fileName, char* newTitle) {
     if (fileName == NULL || newTitle == NULL) {
         return false;
@@ -2443,7 +2406,9 @@ bool editTitle(char* fileName, char* newTitle) {
     }
 
     if (validateSVGimage(img, "svg.xsd")) {
-        writeSVGimage(img, fileName);
+        if (!writeSVGimage(img, fileName)) {
+            res = false;
+        }
     } else {
         res = false;
     }
@@ -2468,7 +2433,9 @@ bool editDescription(char* fileName, char* newDesc) {
     }
 
     if (validateSVGimage(img, "svg.xsd")) {
-        writeSVGimage(img, fileName);
+        if (!writeSVGimage(img, fileName)) {
+            res = false;
+        }
     } else {
         res = false;
     }
@@ -2509,7 +2476,9 @@ bool addJSONShape(char* file, char* JSONShape, char* type) {
     }
 
     if (validateSVGimage(img, "svg.xsd")) {
-        writeSVGimage(img, file);
+        if (!writeSVGimage(img, file)) {
+            res = false;
+        }
     } else {
         res = false;
     }
@@ -2532,11 +2501,82 @@ bool newSVGFile(char* fileName, char* JSON) {
     SVGimage *img = JSONtoSVG(JSON);
 
     if (validateSVGimage(img, "svg.xsd")) {
-        writeSVGimage(img, fileName);
+        if (!writeSVGimage(img, fileName)) {
+            res = false;
+        }
     } else {
         res = false;
     }
 
     deleteSVGimage(img);
     return res;
+}
+
+//Scale the specified shape by a factor of what they wanted
+static bool scaleShape(List* list, float factor, elementType type) {
+    if (list == NULL || factor < 0 || type < SVG_IMAGE || type > GROUP)
+        return false;
+    bool res = true;
+    ListIterator itr = createIterator(list);
+    void *node = nextElement(&itr);
+
+    while (node != NULL) {
+        if (type == RECT) {
+            Rectangle *r = (Rectangle *)node;
+            r->width *= factor;
+            r->height *= factor;
+        } else if (type == CIRC) {
+            Circle *c = (Circle *)node;
+            c->r *= factor;
+        } else if (type == GROUP) {
+            Group* g = (Group*) node;
+            res = scaleShape(g->rectangles, factor, RECT);
+            if (res) {
+                res = scaleShape(g->circles, factor, CIRC);
+                if (res)
+                    res = scaleShape(g->groups, factor, GROUP);
+            }
+        } else {
+            res = false;
+        }
+
+        node = nextElement(&itr);
+    }
+    return res;
+}
+
+//Scale image for the specific type and factor
+bool scaleImage(char* fileName, float factor, char* type) {
+    if (fileName == NULL || type == NULL)
+        return NULL;
+
+    SVGimage *img = createValidSVGimage(fileName, "svg.xsd");
+    if (img == NULL)
+        return false;
+
+    bool result = true;
+    if (strcmp(type, "r") == 0) {
+        result = scaleShape(img->rectangles, factor, RECT);
+    } else if (strcmp(type, "c") == 0) {
+        result = scaleShape(img->circles, factor, CIRC);
+    } else if (strcmp(type, "i") == 0) {
+        result = scaleShape(img->rectangles, factor, RECT);
+        if (result) {
+            result = scaleShape(img->circles, factor, CIRC);
+            if (result)
+                result = scaleShape(img->groups, factor, GROUP);
+        }
+    }
+
+    if (validateSVGimage(img, "svg.xsd")) {
+        if (!writeSVGimage(img, fileName)) {
+            result = false;
+        }
+    } else {
+        result = false;
+    }
+
+    deleteSVGimage(img);
+
+    return result;
 }

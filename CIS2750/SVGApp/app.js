@@ -41,12 +41,9 @@ app.get('/index.js',function(req,res){
 
 //Respond to POST requests that upload files to uploads/ directory
 app.post('/upload', function (req, res) {
-  console.log("inside the uploads function/");
   if(!req.files) {
     return res.status(400).send('No files were uploaded.');
   }
-  console.log(req.files);
- 
   let uploadFile = req.files.uploadFile;
  
   // Use the mv() method to place the file somewhere on your server
@@ -153,7 +150,7 @@ app.get('/getRects', (req, res) => {
   });
   let rects = getRects.getRectsJSON("./uploads/" + req.query.fileName);
   res.send({
-    rects: rects
+    shape: rects
   });
 });
 
@@ -163,7 +160,7 @@ app.get('/getCircs', (req, res) => {
   });
   let circs = getCircles.getCircsJSON("./uploads/" + req.query.fileName);
   res.send({
-    circ: circs
+    shape: circs
   });
 });
 
@@ -173,7 +170,7 @@ app.get('/getPaths', (req, res) => {
   });
   let paths = getPaths.getPathsJSON("./uploads/" + req.query.fileName);
   res.send({
-    paths: paths
+    shape: paths
   });
 });
 
@@ -183,15 +180,15 @@ app.get('/getGroups', (req, res) => {
   });
   let groups = getGroups.getGroupsJSON("./uploads/" + req.query.fileName);
   res.send({
-    groups: groups
+    shape: groups
   });
 });
 
 app.get('/JSONtoAttrsRect', (req, res) => {
   let getAttr = ffi.Library('./libsvgparse', {
-    'getAttributesRect': ['string', ['string', 'string']]
+    'getAttributesRect': ['string', ['string', 'int']]
   });
-  let attrs = getAttr.getAttributesRect("./uploads/" + req.query.fileName, req.query.string);
+  let attrs = getAttr.getAttributesRect("./uploads/" + req.query.fileName, req.query.index);
   res.send({
     attrs: attrs
   });
@@ -199,9 +196,9 @@ app.get('/JSONtoAttrsRect', (req, res) => {
 
 app.get('/JSONtoAttrsCirc', (req, res) => {
   let getAttr = ffi.Library('./libsvgparse', {
-    'getAttributesCirc': ['string', ['string', 'string']]
+    'getAttributesCirc': ['string', ['string', 'int']]
   });
-  let attrs = getAttr.getAttributesCirc("./uploads/" + req.query.fileName, req.query.string);
+  let attrs = getAttr.getAttributesCirc("./uploads/" + req.query.fileName, req.query.index);
   res.send({
     attrs: attrs
   });
@@ -209,9 +206,9 @@ app.get('/JSONtoAttrsCirc', (req, res) => {
 
 app.get('/JSONtoAttrsPath', (req, res) => {
   let getAttr = ffi.Library('./libsvgparse', {
-    'getAttributesPath': ['string', ['string', 'string']]
+    'getAttributesPath': ['string', ['string', 'int']]
   });
-  let attrs = getAttr.getAttributesPath("./uploads/" + req.query.fileName, req.query.string);
+  let attrs = getAttr.getAttributesPath("./uploads/" + req.query.fileName, req.query.index);
   res.send({
     attrs: attrs
   });
@@ -219,9 +216,9 @@ app.get('/JSONtoAttrsPath', (req, res) => {
 
 app.get('/JSONtoAttrsGroup', (req, res) => {
   let getAttr = ffi.Library('./libsvgparse', {
-    'getAttributesGroup': ['string', ['string', 'string']]
+    'getAttributesGroup': ['string', ['string', 'int']]
   });
-  let attrs = getAttr.getAttributesGroup("./uploads/" + req.query.fileName, req.query.string);
+  let attrs = getAttr.getAttributesGroup("./uploads/" + req.query.fileName, req.query.index);
   res.send({
     attrs: attrs
   });
@@ -272,6 +269,16 @@ app.get('/createSVGFile', (req, res) => {
     'newSVGFile': ['bool', ['string', 'string']]
   });
   let result = create.newSVGFile("./uploads/" + req.query.fileName, req.query.args);
+  res.send({
+    sent: result
+  });
+});
+
+app.get('/scaleImage', (req, res) => {
+  let scale = ffi.Library('./libsvgparse', {
+    'scaleImage': ['bool', ['string', 'float', 'string']]
+  });
+  let result = scale.scaleImage("./uploads/" + req.query.fileName, req.query.factor, req.query.type);
   res.send({
     sent: result
   });
