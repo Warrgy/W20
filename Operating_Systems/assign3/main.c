@@ -1,3 +1,11 @@
+/* 
+ * Assignment 3
+ * 
+ * Name: Cameron Fisher
+ * ID: 1057347
+ * Date: Mar 24 / 2020
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -18,10 +26,6 @@ int getOffset(int num) {
 
 int getPageNum(int num) {
     return num >> 8;
-}
-
-void freePhysicalMemory(int* table) {
-    free(table);
 }
 
 //Initialize Page Table
@@ -83,31 +87,27 @@ int addNumToPhysicalMemory(int num, int* physicalMemory) {
 }
 
 //Add the number's frame to the page table and update physical memory
-void addToPageTable(int num, int* pageTable, int* physicalMemory) {
+int addToPageTable(int num, int* pageTable, int* physicalMemory) {
     int pageNum = getPageNum(num);
     //Not set yet
     if (pageTable[pageNum] == -1000) {
         int frame = addNumToPhysicalMemory(num, physicalMemory);
         if (frame == -1) {
             //error occured
-            return;
+            return 0;
         }
         pageTable[pageNum] = frame;
+        return 1;
     } 
+    return 0;
 }
 
-//Add page to pagetable
-void addPage(int num, int* pageTable, int* physicalMemory) {
-    addToPageTable(num, pageTable, physicalMemory);
-    // int frame = getFrameViaPageTable(num, pageTable);
-    
-}
-
-
+//Get the corresponding frame for the pageNumber
 int getFrame(int pageNum, int* pageTable) {
     return pageTable[pageNum];
 }
 
+//Will increment the order of everything in the table by 1
 void incrementCount(TLB* table) {
     for (int i = 0; i < 16; i++) {
         (table[i].order)++;
@@ -115,67 +115,61 @@ void incrementCount(TLB* table) {
 }
 
 //Return frame number corresponding to the pageNumber
-int checkTLB(int pageNum, TLB* TLBTable, int* pageTable, unsigned int* TLBHitCount, unsigned int* pageFaultsCount) {
-    printf("Checking TLB\t");
+int checkTLB(int pageNum, TLB* TLBTable, int* pageTable, unsigned int* TLBHitCount) {
     //Check table if it is in it already. But if there is an empty spot. Then add it in that spot.
     for (int i = 0; i < 16; i++) {
         if (TLBTable[i].pageNumber == pageNum) {
             //hit
-            printf("Incrementing hit.\n");
             (*TLBHitCount)++;
             return TLBTable[i].frameNumber;
         } else if (TLBTable[i].pageNumber == -1000) {
-            printf("incrementing the pageFault\n");
-            (*pageFaultsCount)++;
+            //Free empty spot
             TLBTable[i].pageNumber = pageNum;
             TLBTable[i].frameNumber = getFrame(pageNum, pageTable);
             TLBTable[i].order = 0;
+
             incrementCount(TLBTable);
             return TLBTable[i].frameNumber;
         }
     }
-    
-    
-    printf("Full, so checking..\t");
 
+    unsigned int max = 0;
+    unsigned int maxIndex = 0;
     //Swap with the oldest page
     for (int i = 0; i < 16; i++) {
-        if (TLBTable[i].order == 15) {
-            printf("incrementing pageFault\n");
-            (*pageFaultsCount)++;
-            TLBTable[i].pageNumber = pageNum;
-            TLBTable[i].frameNumber = getFrame(pageNum, pageTable);
-            TLBTable[i].order = 0;
+        if (TLBTable[i].order > max) {
+            max = TLBTable[i].order;
+            maxIndex = i;
         }
     }
-    printf("Swapped out val.");
-    incrementCount(TLBTable);
+    TLBTable[maxIndex].pageNumber = pageNum;
+    TLBTable[maxIndex].frameNumber = getFrame(pageNum, pageTable);
+    TLBTable[maxIndex].order = 0;
 
-    //TESTING
-    for (int i = 0; i < 16; i++) {
-        printf("[%d] %d\n", i , TLBTable[i].order);
-    }
+    incrementCount(TLBTable);
 
     return getFrame(pageNum, pageTable);
 }
 
-unsigned int manageMemory(int num, TLB* TLBTable, int* pageTable, int* physicalMemory, unsigned int* TLBHitCount) {
+//Check the number (num) for the frame number first with a TLBTable then the pageTable. Return the amount of TLBHits
+unsigned int manageMemory(int num, TLB* TLBTable, int* pageTable, int* physicalMemory) {
+    unsigned int TLBHitCount = 0;
+
     int pageNum = getPageNum(num);
     int offset = getOffset(num);
-    unsigned int pageFaults = 0;
 
     int value = getValue(num);
     if (value == -1000) {
         return 0;
     }
 
-    int frame = checkTLB(pageNum, TLBTable, pageTable, TLBHitCount, &pageFaults);
+    int frame = checkTLB(pageNum, TLBTable, pageTable, &TLBHitCount);
 
     int physicalAddress = frame * 256 + offset;
 
     printf("Virtual address: %d Physical address: %d Value: %d\n", num, physicalAddress, value);
-
-    return pageFaults;
+    
+    return TLBHitCount;
 }
 
 int main(int argc, char **argv) {
@@ -196,26 +190,25 @@ int main(int argc, char **argv) {
     unsigned int TLBHitCount = 0;
     unsigned int addressCount = 0;
 
+    //Initialize tables
     int* pageTable = initializePageTable();
     TLB* TLBTable = initializeTLB();
     int* physicalMemory = initializePhysicalMemory();
 
+    //Get each number from file 1 by 1 and check each one in the page table and memory management
     for (int i = 0; i < FILE_LENGTH; i++) {
         if (fgets(line, LINE_LENGTH, fp) == NULL) {
             break;
         }
         int num = atoi(line);
-
         
-        addPage(num, pageTable, physicalMemory);
-        pageFault += manageMemory(num, TLBTable, pageTable, physicalMemory, &TLBHitCount);
+        //Add result into page table
+        pageFault += addToPageTable(num, pageTable, physicalMemory);
+        //Find the virtual addreess
+        TLBHitCount += manageMemory(num, TLBTable, pageTable, physicalMemory);
         
         addressCount++;
     }
-
-    // for (int i = 0; i < 256; i++) {
-    //     printf("   [%d] %d\t%d\n", i,pageTable[i], physicalMemory[i]);
-    // }
 
     printf("Number of Translated Addresses = %d\n", addressCount);
     printf("Page Faults = %d\n", pageFault);
@@ -223,7 +216,7 @@ int main(int argc, char **argv) {
     printf("TLB Hits = %d\n", TLBHitCount);
     printf("TLB Hit Rate = %.3f\n", (float)TLBHitCount / (float)addressCount);
 
-    freePhysicalMemory(physicalMemory);
+    free(physicalMemory);
     free(pageTable);
     free(TLBTable);
     fclose(fp);
