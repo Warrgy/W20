@@ -16,6 +16,7 @@
 #define WORD_AMOUNT 2045
 #define LINE_AMOUNT 204
 
+//Free the word array
 void free2DArray(char** words) {
     for (int i = 0; i < WORD_AMOUNT; i++) {
         if (words[i] == NULL) {
@@ -26,6 +27,7 @@ void free2DArray(char** words) {
     free(words);
 }
 
+//Will print all the words in the array
 void printWords(char** words) {
     for (int i = 0; i < WORD_AMOUNT; i++) {
         if (words[i] == NULL) {
@@ -35,6 +37,18 @@ void printWords(char** words) {
     }
 }
 
+//Will get the key from the user
+char* getInput() {
+    char input[100];
+    printf("Enter the key: ");
+    scanf("%s", input);
+
+    char* key = malloc(sizeof(char) * (strlen(input) + 1));
+    strcpy(key, input);
+    return key;
+}
+
+//Will parse the file data_7.txt and extract all words inside it.
 char** parseFile() {
     FILE *fp = fopen("data_7.txt", "r");
     if (fp == NULL) {
@@ -47,13 +61,13 @@ char** parseFile() {
     char line[256];
 
     for (int i = 0; i < LINE_AMOUNT; i++) {
-        //Get next word on line
         if (fgets(line, 256, fp) == NULL) {
             break;
         }
 
         char c;
         char prev = '\0';
+        //Go through the line and get the words, character by character
         for (int j = 0; j < 256; j++) {
             c = line[j];
 
@@ -61,7 +75,7 @@ char** parseFile() {
                 break;
             }
 
-            //If character then add onto existing word
+            //If character then use in word
             if (islower(c) || isupper(c)) {
                 if (!isupper(prev) && !islower(prev)) {
                     //start new word
@@ -98,20 +112,22 @@ int main(int argc, char *argv[]) {
     if (words == NULL) {
         return -1;
     }
-    // printWords(words);
 
     //Dynamic Programming
     if (strcmp(argv[1],"1") == 0) {
-
         start = clock();
+
+        printf("Not implemented yet.\n");
 
     //Greedy Technique
     } else if (strcmp(argv[1], "2") == 0) {
-
         start = clock();
+
+        printf("Not implemented yet.\n");
 
     } else {
         printf("Please enter one of the following next time: {1,2}\n");
+        free2DArray(words);
         return -1;
     }
 
