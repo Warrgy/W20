@@ -24,6 +24,13 @@ typedef struct probabilityNode{
     float probability;
 } searchNode;
 
+int compare(const void* a, const void *b) {
+    searchNode* x = (searchNode*) a;
+    searchNode* y = (searchNode*) b;
+    // printf("comparing %f & %f\n", x->probability , y->probability);
+    return y->probability - x->probability;
+}
+
 void freeProbabilityTable(searchNode* table) {
     for (int i = 0; i < uniqueWordKeysGlobal; i++) {
         free(table[i].key);
@@ -73,13 +80,123 @@ searchNode* createProbabilityTable(char** words) {
     return table;
 }
 
+float** createMainTable() {
+    float** table = malloc(sizeof(float*) * (uniqueWordKeysGlobal + 2));
+    for (int i = 0; i < uniqueWordKeysGlobal + 2; i++) {
+        table[i] = malloc(sizeof(float) * uniqueWordKeysGlobal + 1);
+        for (int j = 0; j < uniqueWordKeysGlobal + 1; j++) {
+            table[i][j] = 69.0;
+        }
+    }
+    return table;
+}
+
+int** createRootTable() {
+    int** table = malloc(sizeof(int*) * (uniqueWordKeysGlobal + 2));
+    for (int i = 0; i < uniqueWordKeysGlobal + 2; i++) {
+        table[i] = malloc(sizeof(int) * uniqueWordKeysGlobal + 1);
+        for (int j = 0; j < uniqueWordKeysGlobal + 1; j++) {
+            table[i][j] = -1;
+        }
+    }
+    return table;
+}
+
+void freeTable(void** table) {
+    for (int i = 0; i < uniqueWordKeysGlobal + 2; i++) {
+        free(table[i]);
+    }
+    free(table);
+}
+
+void printFloatTable(float** table) {
+    printf("   ");
+    for (int i = 0; i < uniqueWordKeysGlobal + 1; i++) {
+        printf("%d       ", i);
+    }
+    printf("\n");
+    for (int i = 1; i < uniqueWordKeysGlobal + 2; i++) {
+        printf("%d| ", i);
+        for (int j = 0; j < uniqueWordKeysGlobal + 1; j++) {
+            printf("%.3f | ", table[i][j]);
+        }
+        printf("\n");
+    }
+}
+
+void printIntTable(int** table) {
+    printf("   ");
+    for (int i = 0; i < uniqueWordKeysGlobal + 1; i++) {
+        printf("%d   ", i);
+    }
+    printf("\n");
+    for (int i = 1; i < uniqueWordKeysGlobal + 2; i++) {
+        printf("%d| ", i);
+        for (int j = 0; j < uniqueWordKeysGlobal + 1; j++) {
+            printf("%d | ", table[i][j]);
+        }
+        printf("\n");
+    }
+}
+
+searchNode* testProbability() {
+    searchNode* table = malloc(sizeof(searchNode) * 4);
+    uniqueWordKeysGlobal = 4;
+    for (int i = 0; i < 4; i++) {
+        table[i].key = malloc(sizeof(char) * 2);
+        strcpy(table[i].key, "A");
+        table[i].key[0] = 'A' + i;
+    }
+    table[0].probability = 0.1;
+    table[1].probability = 0.2;
+    table[2].probability = 0.4;
+    table[3].probability = 0.3;
+    return table;
+}
 
 void OptimalDynamicBST(char** words) {
     searchNode* probabilityTable = createProbabilityTable(words);
+    // searchNode* probabilityTable = testProbability();
+    unsigned int n = uniqueWordKeysGlobal;
 
-    printProbabilityTable(probabilityTable);
+    float** mainTable = createMainTable();
+    int** rootTable = createRootTable();
 
-    printf("Sup dude.\n");
-    
+    for (int i = 1; i < n + 1; i++) {
+        mainTable[i][i - 1] = 0.0;
+        mainTable[i][i] = probabilityTable[i - 1].probability;
+        rootTable[i][i] = i;
+    }
+    mainTable[n + 1][n] = 0;
+
+    for (unsigned int d = 1; d < n; d++) {
+        for (unsigned int i = 1; i < n - d + 1; i++) {
+            unsigned int j = i + d;
+            float minval = 999999;
+            int kmin = 99999;
+            for (unsigned int k = i; k < j + 1; k++) {
+                if ((mainTable[i][k-1] + mainTable[k + 1][j]) < minval) {
+                    minval = mainTable[i][k-1] + mainTable[k + 1][j];
+                    kmin = k;
+                }
+            }
+            rootTable[i][j] = kmin;
+            float sum = mainTable[i][i]; 
+            for (unsigned int s = i + 1; s < j + 1; s++) {
+                sum += probabilityTable[s - 1].probability;
+            }
+            mainTable[i][j] = minval + sum;
+        }
+    }
+
+    printf(" C[1, n], R ==== %f, %d\n", mainTable[1][n], rootTable[1][n]);
+
+    // printf("[132] {%s} %d -> %f\n", probabilityTable[132].key, probabilityTable[132].occurence, probabilityTable[132].probability);
+
+    // printFloatTable(mainTable);
+    // printIntTable(rootTable);
+
+    freeTable((void**)mainTable);
+    freeTable((void**)rootTable);
     freeProbabilityTable(probabilityTable);
 }
