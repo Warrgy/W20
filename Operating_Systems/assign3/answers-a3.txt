@@ -1,0 +1,35 @@
+Q1) Assuming a 1-KB page size, what are the page numbers and offsets for the following address references (provided as decimal numbers):
+    A: Page Number: 3, Offsett: 13
+    B: Page Number: 41, Offset: 111
+    C: Page Number: 210, Offset: 161
+    D: Page Number: 634, Offset: 784
+    E: Page Number: 1953, Offset: 129
+
+Q2) Consider a logical address space of 256 pages with a 4-KB page size, mapped onto a physical memory of 64 frames.
+    A: 20 bits
+    B: 18 bits
+
+Q3) Consider the following page reference string:
+1, 2, 3, 4, 2, 1, 5, 6, 2, 1, 2, 3, 7, 6, 3, 2, 1, 2, 3, 6.
+How many page faults would occur for the following replacement algorithms, assuming one, two, three, four, five, six, and seven frames? Remember that all frames are initially empty, so your first unique pages will cost one fault each.
+    LRU Replacement:        1 Frame: 20
+                            2 Frames: 18
+                            3 Frames: 15
+                            4 Frames: 10
+                            5 Frames: 8
+                            6 Frames: 7
+                            7 Frames: 7
+    FIFO Replacement:       1 Frame: 20
+                            2 Frames: 18
+                            3 Frames: 16
+                            4 Frames: 14
+                            5 Frames: 10
+                            6 Frames: 10
+                            7 Frames: 7
+    Optimal Replacement:    1 Frame: 20
+                            2 Frames: 15
+                            3 Frames: 11
+                            4 Frames: 8
+                            5 Frames: 7
+                            6 Frames: 7
+                            7 Frames: 7
