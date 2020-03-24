@@ -16,6 +16,8 @@
 #define WORD_AMOUNT 2045
 #define LINE_AMOUNT 204
 
+void OptimalDynamicBST(char** words);
+
 //Free the word array
 void free2DArray(char** words) {
     for (int i = 0; i < WORD_AMOUNT; i++) {
@@ -118,6 +120,8 @@ int main(int argc, char *argv[]) {
         start = clock();
 
         printf("Not implemented yet.\n");
+
+        OptimalDynamicBST(words);
 
     //Greedy Technique
     } else if (strcmp(argv[1], "2") == 0) {
