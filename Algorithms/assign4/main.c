@@ -42,7 +42,7 @@ void printWords(char** words) {
 //Will get the key from the user
 char* getInput() {
     char input[100];
-    printf("Enter the key: ");
+    printf("Enter a key: ");
     scanf("%s", input);
 
     char* key = malloc(sizeof(char) * (strlen(input) + 1));
@@ -118,8 +118,6 @@ int main(int argc, char *argv[]) {
     //Dynamic Programming
     if (strcmp(argv[1],"1") == 0) {
         start = clock();
-
-        printf("Not implemented yet.\n");
 
         OptimalDynamicBST(words);
 
