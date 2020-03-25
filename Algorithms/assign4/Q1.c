@@ -24,13 +24,7 @@ typedef struct probabilityNode{
     float probability;
 } searchNode;
 
-int compare(const void* a, const void *b) {
-    searchNode* x = (searchNode*) a;
-    searchNode* y = (searchNode*) b;
-    // printf("comparing %f & %f\n", x->probability , y->probability);
-    return y->probability - x->probability;
-}
-
+//Free a probability table
 void freeProbabilityTable(searchNode* table) {
     for (int i = 0; i < uniqueWordKeysGlobal; i++) {
         free(table[i].key);
@@ -38,6 +32,7 @@ void freeProbabilityTable(searchNode* table) {
     free(table);
 }
 
+//Print a probability table
 void printProbabilityTable(searchNode* table) {
     for (int i = 0; i < uniqueWordKeysGlobal; i++) {
         printf("[%d] {%s} -> %d -> %.3f\n", i, table[i].key, table[i].occurence, table[i].probability);
@@ -55,6 +50,15 @@ bool checkUniqueness(char* word, searchNode* table) {
     return true;
 }
 
+//Compare function
+int compare(const void* a, const void* b) {
+    const searchNode* x = (const searchNode*) a;
+    const searchNode* y = (const searchNode*) b;
+
+    return strcmp(x->key, y->key);
+}
+
+//Create a probability table
 searchNode* createProbabilityTable(char** words) {
     searchNode* table = malloc(sizeof(searchNode));
 
@@ -77,9 +81,12 @@ searchNode* createProbabilityTable(char** words) {
         table[i].probability = (float) table[i].occurence / (float) uniqueWordKeysGlobal;
     }
 
+    qsort(table, uniqueWordKeysGlobal, sizeof(searchNode), compare);
+
     return table;
 }
 
+//Create a main table
 float** createMainTable() {
     float** table = malloc(sizeof(float*) * (uniqueWordKeysGlobal + 2));
     for (int i = 0; i < uniqueWordKeysGlobal + 2; i++) {
@@ -91,6 +98,7 @@ float** createMainTable() {
     return table;
 }
 
+//Create a root table
 int** createRootTable() {
     int** table = malloc(sizeof(int*) * (uniqueWordKeysGlobal + 2));
     for (int i = 0; i < uniqueWordKeysGlobal + 2; i++) {
@@ -102,6 +110,7 @@ int** createRootTable() {
     return table;
 }
 
+//Free a table
 void freeTable(void** table) {
     for (int i = 0; i < uniqueWordKeysGlobal + 2; i++) {
         free(table[i]);
@@ -109,6 +118,7 @@ void freeTable(void** table) {
     free(table);
 }
 
+//Print a main table (float table)
 void printFloatTable(float** table) {
     printf("   ");
     for (int i = 0; i < uniqueWordKeysGlobal + 1; i++) {
@@ -124,6 +134,7 @@ void printFloatTable(float** table) {
     }
 }
 
+//Print a root table (int table)
 void printIntTable(int** table) {
     printf("   ");
     for (int i = 0; i < uniqueWordKeysGlobal + 1; i++) {
@@ -139,29 +150,59 @@ void printIntTable(int** table) {
     }
 }
 
-searchNode* testProbability() {
-    searchNode* table = malloc(sizeof(searchNode) * 4);
-    uniqueWordKeysGlobal = 4;
-    for (int i = 0; i < 4; i++) {
-        table[i].key = malloc(sizeof(char) * 2);
-        strcpy(table[i].key, "A");
-        table[i].key[0] = 'A' + i;
+//Will return the probability for the given key in the table
+float getProbability(searchNode* probabilityTable, char* key) {
+    for (int i = 0; i < uniqueWordKeysGlobal; i++) {
+        if (strcmp(probabilityTable[i].key, key) == 0) {
+            return probabilityTable[i].probability;
+        }
     }
-    table[0].probability = 0.1;
-    table[1].probability = 0.2;
-    table[2].probability = 0.4;
-    table[3].probability = 0.3;
-    return table;
+    return -10.0;
 }
 
+//Get the index of the key from input
+unsigned int getKeyIndex(searchNode* probabilityTable, char* key) {
+    for (unsigned int i = 0; i < uniqueWordKeysGlobal; i++) {
+        if (strcmp(probabilityTable[i].key, key) == 0) {
+            return i + 1;
+        }
+    }
+    return (rand() % uniqueWordKeysGlobal) + 1;
+}
+
+//Recursively go through tree and find if the key matches
+void findKey(float** mainTable, int** rootTable, searchNode* probabilityTable, char* key, unsigned int keyIndex, unsigned int left, unsigned int right) {
+    int root = rootTable[left][right];
+    printf("Compared with %s (%.3f), ", probabilityTable[root - 1].key, mainTable[left][right]);
+    if (keyIndex < root) {
+        //left
+        printf("go left.\n");
+        findKey(mainTable, rootTable, probabilityTable, key, keyIndex, left, root - 1);
+    } else if (keyIndex > root) {
+        //right
+        printf("go right.\n");
+        findKey(mainTable, rootTable, probabilityTable, key, keyIndex, root + 1, right);
+    } else {
+        //compare keys for equality (either not found or found)
+        if (strcmp(probabilityTable[root - 1].key, key) == 0) {
+            printf("found.\n");
+        } else {
+            printf("Not found.\n");
+        }
+    }
+}
+
+//Use dynamic programming and create a Optimal binary search tree
 void OptimalDynamicBST(char** words) {
+    char* key = getInput();
+
     searchNode* probabilityTable = createProbabilityTable(words);
-    // searchNode* probabilityTable = testProbability();
     unsigned int n = uniqueWordKeysGlobal;
 
     float** mainTable = createMainTable();
     int** rootTable = createRootTable();
 
+    //Initialize tables
     for (int i = 1; i < n + 1; i++) {
         mainTable[i][i - 1] = 0.0;
         mainTable[i][i] = probabilityTable[i - 1].probability;
@@ -169,6 +210,7 @@ void OptimalDynamicBST(char** words) {
     }
     mainTable[n + 1][n] = 0;
 
+    //Fill in table
     for (unsigned int d = 1; d < n; d++) {
         for (unsigned int i = 1; i < n - d + 1; i++) {
             unsigned int j = i + d;
@@ -188,15 +230,11 @@ void OptimalDynamicBST(char** words) {
             mainTable[i][j] = minval + sum;
         }
     }
-
-    printf(" C[1, n], R ==== %f, %d\n", mainTable[1][n], rootTable[1][n]);
-
-    // printf("[132] {%s} %d -> %f\n", probabilityTable[132].key, probabilityTable[132].occurence, probabilityTable[132].probability);
-
-    // printFloatTable(mainTable);
-    // printIntTable(rootTable);
+    //Use the tables generated find the key.
+    findKey(mainTable, rootTable, probabilityTable, key, getKeyIndex(probabilityTable, key), 1, n);
 
     freeTable((void**)mainTable);
     freeTable((void**)rootTable);
     freeProbabilityTable(probabilityTable);
+    free(key);
 }
