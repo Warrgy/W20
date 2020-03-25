@@ -17,6 +17,7 @@
 #define LINE_AMOUNT 204
 
 void OptimalDynamicBST(char** words);
+void OptimalGreedyBST(char** words);
 
 //Free the word array
 void free2DArray(char** words) {
@@ -126,6 +127,8 @@ int main(int argc, char *argv[]) {
         start = clock();
 
         printf("Not implemented yet.\n");
+
+        OptimalGreedyBST(words);
 
     } else {
         printf("Please enter one of the following next time: {1,2}\n");
