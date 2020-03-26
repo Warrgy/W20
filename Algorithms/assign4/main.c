@@ -126,8 +126,6 @@ int main(int argc, char *argv[]) {
     } else if (strcmp(argv[1], "2") == 0) {
         start = clock();
 
-        printf("Not implemented yet.\n");
-
         OptimalGreedyBST(words);
 
     } else {
