@@ -4,7 +4,7 @@
  *
  * Name = Cameron Fisher
  * ID = 1057347
- * Date = Apr 6, 2020
+ * Date = Mar 30, 2020
  **/
 
 #include <stdio.h>
@@ -32,6 +32,11 @@ void freeProbabilityTable(searchNode* table) {
     free(table);
 }
 
+//Get the unique words count.
+unsigned int getUniqueWordsCount() {
+    return uniqueWordKeysGlobal;
+}
+
 //Print a probability table
 void printProbabilityTable(searchNode* table) {
     for (int i = 0; i < uniqueWordKeysGlobal; i++) {
@@ -55,7 +60,13 @@ int compare(const void* a, const void* b) {
     const searchNode* x = (const searchNode*) a;
     const searchNode* y = (const searchNode*) b;
 
-    return strcmp(x->key, y->key);
+    int compar = strcmp(x->key, y->key);
+
+    if (compar == 0) {
+        return (int) (y->probability - x->probability) * 1000;
+    }
+
+    return compar;
 }
 
 //Create a probability table
