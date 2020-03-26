@@ -4,14 +4,13 @@
  *
  * Name = Cameron Fisher
  * ID = 1057347
- * Date = Apr 6, 2020
+ * Date = Mar 30, 2020
  **/
 
 #include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
 #include <stdlib.h>
-#include <math.h>
 
 #define WORD_AMOUNT 2045
 
@@ -34,17 +33,18 @@ void freeProbabilityTable(searchNode* table);
 unsigned int getUniqueWordsCount();
 float getProbability(searchNode* probabilityTable, char* key);
 
+//Initialize a tree node
 Tree* initTree(char* key, float probability) {
     Tree* t = malloc(sizeof(Tree));
     t->probability = probability;
-    printf("part\n");
+
     if (key != NULL) {
         t->key = malloc(sizeof(char) * (strlen(key) + 1));
         strcpy(t->key, key);
     } else {
         t->key = NULL;
     }
-    printf("ay\n");
+
 
     t->child[0] = NULL;
     t->child[1] = NULL;
@@ -52,6 +52,7 @@ Tree* initTree(char* key, float probability) {
     return t;
 }
 
+//Print the tree
 void printTree(Tree* t) {
     if (t != NULL) {
         printf("[%s %f]", t->key, t->probability);
@@ -67,6 +68,7 @@ void printTree(Tree* t) {
     }
 }
 
+//Free the tree
 void freeTree(Tree* t) {
     if (t != NULL) {
         free(t->key);
@@ -76,63 +78,78 @@ void freeTree(Tree* t) {
     }
 }
 
+//Will get the most probabale index in the table between left and right indices
+unsigned int getMostProbabableIndex(searchNode* table, unsigned int left, unsigned int right) {
+    float max = table[left].probability;
+    unsigned int maxIndex = left;
+    for (unsigned int i = left; i < right ; i++) {
+        if (table[i].probability > max) {
+            max = table[i].probability;
+            maxIndex = i;
+        }
+    }
+    return maxIndex;
+}
+
+//Will generate the tree. At each call it will get the most probable index between the indices and make it the node
 Tree* generateTree(searchNode* table, unsigned int length, unsigned int left, unsigned int right, Tree* parent, bool isRight) {
     if (table == NULL) {
         return NULL;
     }
-    unsigned int median = (right - left) / 2;
+    unsigned int maxProbIndex = getMostProbabableIndex(table, left, right);
+    if (maxProbIndex == left && maxProbIndex == right) {
+        return NULL;
+    }
 
-    printf("sup -> median = %d, left = %d, right = %d\n", median, left, right);
-    Tree* node = initTree(table[median].key, table[median].probability);
-printf("heya\n");
+    Tree* node = initTree(table[maxProbIndex].key, table[maxProbIndex].probability);
     if (parent != NULL) {
         if (isRight) {
             //right
-            printf("came from right.\n");
             parent->child[1] = node;
         } else {
             //left
-            printf("came from left.\n");
             parent->child[0] = node;
         }
     }
 
-    generateTree(table, length, median + 1, right, node, true);
-    generateTree(table, length, left, median, node, false);
+    generateTree(table, length, maxProbIndex + 1, right, node, true);
+    generateTree(table, length, left, maxProbIndex, node, false);
     
     return node;
 }
 
-void searchTree(Tree* t, char* key, searchNode* table) {
-    if (table == NULL) {
-        return;
-    }
+//Search the tree for the key
+void searchTree(Tree* t, char* key) {
     if (t != NULL) {
-        float keyProbability = getProbability(table, key);
-        if (keyProbability == t->probability) {
-            //compare strings
-        } 
+        printf("Compared with %s (%.3f), ", t->key, t->probability);
+        if (strcmp(t->key, key) == 0) {
+            printf("found string.\n");
+        } else if (strcmp(t->key, key) > 0) {
+            printf("go left.\n");
+            searchTree(t->child[0], key);
+        } else {
+            printf("go right.\n");
+            searchTree(t->child[1], key);
+        }
+    } else {
+        printf("Not found.\n");
     }
 }
 
+//Create an optimal BST using the greedy technique
 void OptimalGreedyBST(char** words) {
     searchNode* table = createProbabilityTable(words);
     unsigned int n = getUniqueWordsCount();
 
-    // printProbabilityTable(table);
-
-    Tree* t = generateTree(table, n, 0, n - 1, NULL, false);
+    Tree* t = generateTree(table, n, 0, n, NULL, true);
     if (t == NULL) {
         freeProbabilityTable(table);
         return;
     }
 
-    printTree(t);
-
     char* key = getInput();
 
-    // searchTree(t, key, table);
-
+    searchTree(t, key);
 
     free(key);
     freeTree(t);
