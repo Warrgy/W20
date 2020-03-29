@@ -31,7 +31,6 @@ searchNode* createProbabilityTable(char** words);
 void printProbabilityTable(searchNode* table);
 void freeProbabilityTable(searchNode* table);
 unsigned int getUniqueWordsCount();
-float getProbability(searchNode* probabilityTable, char* key);
 
 //Initialize a tree node
 Tree* initTree(char* key, float probability) {
@@ -71,7 +70,9 @@ void printTree(Tree* t) {
 //Free the tree
 void freeTree(Tree* t) {
     if (t != NULL) {
-        free(t->key);
+        if (t->key != NULL) {
+            free(t->key);
+        }
         freeTree(t->child[0]);
         freeTree(t->child[1]);
         free(t);

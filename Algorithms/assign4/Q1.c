@@ -89,7 +89,7 @@ searchNode* createProbabilityTable(char** words) {
 
     //Update the probability of each
     for (int i = 0; i < uniqueWordKeysGlobal; i++) {
-        table[i].probability = (float) table[i].occurence / (float) uniqueWordKeysGlobal;
+        table[i].probability = (float) table[i].occurence / (float) WORD_AMOUNT;
     }
 
     qsort(table, uniqueWordKeysGlobal, sizeof(searchNode), compare);
