@@ -14,6 +14,7 @@ __All work done by @Warrgy (AKA Cameron Fisher)__
   * assign1/ - Hand written answers to questions he gave us.
   * assign2/ - Analysis and Design of brute force and divide and conquer inversion. Also brute force and divide and conquer of the convex hull.
   * assign3/ - Developed brute force and presort anagram solving algorithm. Additionally, made a brute force string matching, Horspool Algorithm, Boyer-Moore Algorithm.
+  * assign4/ - Developed two optimal BST, one with dynamic programming, one with the greedy technique
 
 * __CIS2750/__
   * AKA Software Systems Integration and Development
@@ -28,6 +29,7 @@ __All work done by @Warrgy (AKA Cameron Fisher)__
   * Coursework done for my Operating Systems Class, (As you may have thought)
   * assign2/  - Made a CPU scheduling algorithm (Shortest Remaining time first)
     * -Simulation created
+  * assign3/ - Made a simulation for memory management and translating virtual addresses to physical
    
 * __Statistics/__
   * Assignments me and a group member created.
