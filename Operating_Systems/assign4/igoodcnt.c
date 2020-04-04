@@ -33,7 +33,7 @@ int main(int argc, char * argv[])
 
 	//Make sure they entered 2 arguments from the command line.
 	if (argc != 2) {
-		fprintf(stderr, "Please do %s {NITER value}\n", argv[0]);
+		fprintf(stderr, "usage: %s valueOfNITER\n", argv[0]);
 		exit(EXIT_FAILURE);
 	}
 
