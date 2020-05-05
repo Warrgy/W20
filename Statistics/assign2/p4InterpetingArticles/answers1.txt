@@ -1,0 +1,5 @@
+3) 
+	We can be 95% confident that the population mean of raccoons with salmonella in faeces for the the months of May to July lie between 20.7 and 31.8.
+
+4)
+	There is no statistically significant evidence that salmonella occurs on raccoon paws or in raccoon faeces during the months of August to October.

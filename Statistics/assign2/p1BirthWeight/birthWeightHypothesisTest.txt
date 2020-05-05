@@ -1,0 +1,5 @@
+There is no interesting hypothesis test that can be performed with just
+the data provided. Almost all interesting hypothosis tests would
+involve comparing these elephants to another group of elephants, say,
+elephants that were not born in captivity. But, we were not provided
+data for another group of elephants to compare to this group.

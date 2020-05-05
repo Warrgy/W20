@@ -1,0 +1,4 @@
+Based on Normal Quantile-Quantile plot the normality assumption required
+by the t procedure do not seem to be violated. Besides an outlier near
+the bottom, there aren't any values that seem to stray too far away from
+the line.

@@ -1,0 +1,12 @@
+a)
+
+The estimated standard deviation of the samping distribution for
+gestation period of male asian elephants is 5.8 days.
+
+b)
+
+The null hypothessis is H0: mu airExposed = mu control. The p-value
+shows strong evidence against the hypothesis that control fish and
+air exposed fish  averagly produce the same amount of lactate.
+
+

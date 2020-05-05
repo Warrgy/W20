@@ -1,0 +1,13 @@
+data:  fish
+t = 1.1924, df = 41, p-value = 0.24
+alternative hypothesis: true difference in means is not equal to 0
+95 percent confidence interval:
+ -7.623487 29.604030
+sample estimates:
+ mean in group Control mean in group Recovery 
+              63.69615               52.70588 
+
+
+
+
+After interpretation, we have found that the measure of the strength of the evidence against the null hypothesis is 0.24, and due to this p-value being greater than the 95% significance level, we can conclude that there is not statistically significant evidence against the null hypothesis.

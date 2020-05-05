@@ -1,0 +1,20 @@
+The 95% confidence interval for the Birth Weight of African Elephants
+Born in Captivity is (104.8026, 119.1900). As such, we can be 95%
+confident that the true mean Birth Weight of all African Elephants born
+in captivity is between 104.8026 kg and 119.1900 kg.
+
+
+
+
+	One Sample t-test
+
+data:  birthWeights$Weight
+t = 32.002, df = 26, p-value < 2.2e-16
+alternative hypothesis: true mean is not equal to 0
+95 percent confidence interval:
+ 104.8026 119.1900
+sample estimates:
+mean of x 
+ 111.9963
+
+

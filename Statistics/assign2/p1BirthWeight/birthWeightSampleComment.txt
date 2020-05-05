@@ -1,0 +1,9 @@
+The author of this study collected pre-existing data from organizatoins
+that have Elephants under their care. The author does not say what the
+sampling method was of each of these institutions. But he does state
+that they're "accredited by the relevant national or international
+associations of zoos and aquariums". Given that they're accredited I'm
+going to assume that they made a good faith effort not to introduce
+bias to their sampling method (I'm guessing they just weighed every
+Elephant born under their care). Given that assumption, I think 
+unlikely that our sample is significantly biased.
